@@ -138,6 +138,9 @@ void *image_show( void *)        /*analiza imagem*/
         else if(mouseInfo.event == -1)
         {
             Rect myDim(frameCopy.cols/2,frameCopy.rows/2, 50, 50);
+            alvo.x=alvof.x=frameCopy.cols/2;
+            alvo.y=alvof.y=frameCopy.rows/2;
+            
             frameAnalize = frameCopy(myDim);     
             frameAnalize.copyTo(frameAnalize);
             mouseInfo.event=-2;
@@ -150,7 +153,24 @@ void *image_show( void *)        /*analiza imagem*/
 
         /// Do the Matching and Normalize
         int match_method=1; //1-5
-        matchTemplate( frameCopy, frameAnalize, result, match_method );
+        Point origem;
+        Point origemAbs;
+        origem.x=alvof.x-100;
+        origem.y=alvof.y-100;
+        if(origem.x<0)
+        {
+            origemAbs.x=abs(origem.x);
+            origem.x=0;
+        }
+        if(origem.y<0)
+        {
+            origemAbs.y=abs(origem.y);
+            origem.y=0;
+        }
+        Rect Dim(origem.x,origem.y,200+origemAbs.x ,200+origemAbs.y);
+        Mat  frameCopyReduzido = frameCopy(Dim).clone();
+
+        matchTemplate( frameCopyReduzido, frameAnalize, result, match_method );
         normalize( result, result, 0, 1, NORM_MINMAX, -1, Mat() );
 
         /// Localizing the best match with minMaxLoc
@@ -165,19 +185,20 @@ void *image_show( void *)        /*analiza imagem*/
             { matchLoc = maxLoc; }
         
         /// make a dif with the original and the matched
-        Rect myDim2(matchLoc.x,matchLoc.y,50 , 50);
+        Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
         Mat frameAnalizado = frameCopy(myDim2).clone(); 
-        // Mat subt = frameAnalize - frameAnalizado;
 
         /// cut the image to make something more.... cool
-        Rect roi1( Point( frameCopy.cols-50, 0 ), frameAnalize.size() );
+        Rect roi1( Point( frameCopy.cols-frameAnalize.cols, 0 ), frameAnalize.size() );
         frameAnalize.copyTo( frameCopy( roi1 ) );
-        Rect roi2( Point( frameCopy.cols-50, 50 ), frameAnalize.size() );
+        Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
         frameAnalizado.copyTo( frameCopy( roi2 ) );
+        Rect roi3( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
+        frameCopyReduzido.copyTo( frameCopy( roi3 ) );
 
         // Translate matchCoord to Point
-        alvo.x=matchLoc.x+25;
-        alvo.y=matchLoc.y+25;
+        alvo.x=matchLoc.x+origem.x+25;
+        alvo.y=matchLoc.y+origem.y+25;
         alvof.x=filterx.filter(alvo.x,timer_image_show.end()*3);
         alvof.y=filtery.filter(alvo.y,timer_image_show.end()*3);
 
@@ -211,6 +232,9 @@ void *image_show( void *)        /*analiza imagem*/
         namedWindow("image_show", CV_WINDOW_NORMAL); 
         setMouseCallback("image_show", CallBackFunc, NULL);
         
+        //imshow("cortado",frameCopyReduzido);
+        //namedWindow("cortado", CV_WINDOW_NORMAL);
+
         //imshow("analize",frameAnalize);
         //namedWindow("analize", CV_WINDOW_NORMAL);
         
@@ -222,7 +246,7 @@ void *image_show( void *)        /*analiza imagem*/
         
         //imshow("sub",subt);
         //namedWindow("sub", CV_WINDOW_NORMAL); 
-        Caviso;  printf("Fps do streaming: %.2f\n",1/filter.filter(timer_image_show.b(),5*timer_image_show.b())); //end_fps();
+        Caviso;  printf("Fps do image_show: %.2f\n",1/filter.filter(timer_image_show.b(),5*timer_image_show.b())); //end_fps();
         Caviso;  printf("tempo de image_show: %f s \n",timer_image_show.b());
         waitKey(30);
         //pthread_mutex_unlock(&in_window);
