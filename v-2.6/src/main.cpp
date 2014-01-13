@@ -88,12 +88,6 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
         pthread_mutex_lock(&in_frame);
         cap >> frame;
 
-        //pthread_mutex_lock(&in_window);
-        //imshow("frame",frame);
-        //namedWindow("frame", CV_WINDOW_NORMAL);
-        //pthread_mutex_unlock(&in_window);
-
-        //printf("size: %d,%d\n",frame.cols,frame.rows );
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
         waitKey(30);
@@ -246,20 +240,6 @@ void *image_show( void *)        /*analiza imagem*/
         namedWindow("image_show", CV_WINDOW_NORMAL); 
         setMouseCallback("image_show", CallBackFunc, NULL);
         
-        //imshow("cortado",frameCopyReduzido);
-        //namedWindow("cortado", CV_WINDOW_NORMAL);
-
-        //imshow("analize",frameAnalize);
-        //namedWindow("analize", CV_WINDOW_NORMAL);
-        
-        //imshow("result",result);
-        //namedWindow("result", CV_WINDOW_NORMAL); 
-        
-        //imshow("analizado",frameAnalizado);
-        //namedWindow("analizado", CV_WINDOW_NORMAL); waitKey(30);
-        
-        //imshow("sub",subt);
-        //namedWindow("sub", CV_WINDOW_NORMAL); 
         Caviso;  printf("Fps do image_show: %.2f\n",1/filter.filter(timer_image_show.b(),5*timer_image_show.b())); //end_fps();
         Caviso;  printf("tempo de image_show: %f s \n",timer_image_show.b());
 
@@ -278,6 +258,7 @@ void *image_show( void *)        /*analiza imagem*/
 
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
+    printf("callback\n");
     mouseInfo.event=event;
     switch( event )
     {
