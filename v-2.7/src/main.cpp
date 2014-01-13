@@ -8,8 +8,9 @@ pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;
 /************************************************/  
 
 /********************FUNCTIONS*******************/
-void *streaming(void *);                //thread que faz a captura de imagens da camera deixando tudo atualizado o quanto poder
-void *image_show (void *);             
+void *streaming(void *);                //thread of frame capture
+void *image_show (void *);              //thread of frame analize
+void *thread_analize (void *);              //thread of frame analize
 void CallBackFunc(int event, int x, int y, int flags, void* userdata);    
 /********************FUNCTIONS*******************/
 
@@ -66,15 +67,27 @@ int main(int argc, char *argv[])
 
     pthread_t get_img;
     pthread_t show_img;
+    pthread_t thread_info;
 
-    pthread_create(&get_img, NULL, streaming , NULL); //pega imagem da camera ou do arquivo
-    pthread_create(&show_img, NULL, image_show , NULL); //pega imagem da camera ou do arquivo
+    pthread_create(&get_img, NULL, streaming , NULL);   //take image from camera or file
+    pthread_create(&show_img, NULL, image_show , NULL); //take frame and analize
+    pthread_create(&thread_info, NULL, thread_analize , NULL); //analize the threads
 
     pthread_join(get_img,NULL); 
     pthread_join(show_img,NULL); 
+    pthread_join(thread_info,NULL); 
 
 
 }
+
+
+void *thread_analize(void *)
+{
+    //wait signal 1 for 0.1s else print and analize other
+    //signal 2
+    //signal 3
+}
+
 
 
 void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
