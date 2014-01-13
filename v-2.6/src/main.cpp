@@ -196,15 +196,25 @@ void *image_show( void *)        /*analiza imagem*/
         Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
         frameAnalizado.copyTo( frameCopy( roi2 ) );
         Rect roi3( Point( frameCopy.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
-        frameAnalizado.copyTo( frameCopy( roi3 ) );
+        frameAnalizadoFiltrado.copyTo( frameCopy( roi3 ) );
         Rect roi4( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
         frameCopyReduzido.copyTo( frameCopy( roi4 ) );
 
         // Translate matchCoord to Point
         alvo.x=matchLoc.x+origem.x+25;
         alvo.y=matchLoc.y+origem.y+25;
-        alvof.x=filterx.filter(alvo.x,timer_image_show.end()*3);
-        alvof.y=filtery.filter(alvo.y,timer_image_show.end()*3);
+        alvof.x=filterx.filter(alvo.x,timer_image_show.end()*4);
+        alvof.y=filtery.filter(alvo.y,timer_image_show.end()*4);
+
+        // math erro
+        if(alvo.x<0 || alvo.y<0 || alvof.x<0 || alvof.y<0)
+        {
+            Cerro; printf("MATH ERROR (1)\n");
+        }
+        if(alvo.x>frameCopy.cols || alvo.y>frameCopy.rows || alvof.x>frameCopy.cols || alvof.y>frameCopy.rows)
+        {
+            Cerro; printf("MATH ERROR (2)\n");
+        }
 
         /// Make the image colorful again
         cvtColor(frameCopy, frameCopy, CV_GRAY2RGB);
@@ -252,6 +262,12 @@ void *image_show( void *)        /*analiza imagem*/
         //namedWindow("sub", CV_WINDOW_NORMAL); 
         Caviso;  printf("Fps do image_show: %.2f\n",1/filter.filter(timer_image_show.b(),5*timer_image_show.b())); //end_fps();
         Caviso;  printf("tempo de image_show: %f s \n",timer_image_show.b());
+
+        // erro in some math loop ou analize
+        if(1/filter.filter(timer_image_show.b(),5*timer_image_show.b())<4)
+        {
+            Cerro; printf("ERROR DROP THE BASS\n");
+        }
         waitKey(30);
         //pthread_mutex_unlock(&in_window);
         
