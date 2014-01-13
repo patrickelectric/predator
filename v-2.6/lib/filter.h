@@ -19,6 +19,8 @@ double filterOrder1::filter(double x,double filterTime)
 	{
 		timer1.a();
 		number[0]=x; number[1]=0;
+		started=true;
+		return number[0];
 	}
 	else
 		number[0]=x;
@@ -26,6 +28,5 @@ double filterOrder1::filter(double x,double filterTime)
 	//printf("timer end: %f\n",timer1.end() );
 	number[1]=number[1]*( 1-timer1.end()/(filterTime+timer1.end()))+(timer1.end()/(filterTime+timer1.end()))*number[0];
 	timer1.a();
-	started=true;
 	return number[1];
 }

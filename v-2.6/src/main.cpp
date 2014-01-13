@@ -187,14 +187,18 @@ void *image_show( void *)        /*analiza imagem*/
         /// make a dif with the original and the matched
         Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
         Mat frameAnalizado = frameCopy(myDim2).clone(); 
+        Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
+        Mat frameAnalizadoFiltrado = frameCopy(myDim3).clone(); 
 
         /// cut the image to make something more.... cool
         Rect roi1( Point( frameCopy.cols-frameAnalize.cols, 0 ), frameAnalize.size() );
         frameAnalize.copyTo( frameCopy( roi1 ) );
         Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
         frameAnalizado.copyTo( frameCopy( roi2 ) );
-        Rect roi3( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
-        frameCopyReduzido.copyTo( frameCopy( roi3 ) );
+        Rect roi3( Point( frameCopy.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
+        frameAnalizado.copyTo( frameCopy( roi3 ) );
+        Rect roi4( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
+        frameCopyReduzido.copyTo( frameCopy( roi4 ) );
 
         // Translate matchCoord to Point
         alvo.x=matchLoc.x+origem.x+25;
