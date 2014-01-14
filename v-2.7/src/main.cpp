@@ -4,7 +4,9 @@
 
 /**********************MUTEX*********************/ 
 pthread_mutex_t in_frame = PTHREAD_MUTEX_INITIALIZER;    
-pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;    
+pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+pthread_cond_t cond[2] = PTHREAD_COND_INITIALIZER;   
 /************************************************/  
 
 /********************FUNCTIONS*******************/
@@ -83,6 +85,11 @@ int main(int argc, char *argv[])
 
 void *thread_analize(void *)
 {
+    while(1)
+    {
+        printf("frame %d\n",pthread_cond_wait(&cond[0], &mutex));
+        printf("show %d\n",pthread_cond_wait(&cond[1], &mutex));
+    }
     //wait signal 1 for 0.1s else print and analize other
     //signal 2
     //signal 3
@@ -103,9 +110,9 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
 
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
-        waitKey(30);
         pthread_mutex_unlock(&in_frame);
         usleep(30);
+        pthread_cond_signal(&cond[0]);
     }
     Cerro; printf("Streaming Down !\n");
     return NULL;
@@ -262,6 +269,7 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("ERROR DROP THE BASS\n");
         }
         waitKey(30);
+        pthread_cond_signal(&cond[1]);
         //pthread_mutex_unlock(&in_window);
         
     }
