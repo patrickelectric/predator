@@ -13,6 +13,7 @@
 #include <termios.h>  /* POSIX terminal control definitions */
 #include <sys/ioctl.h>
 #include <getopt.h>
+#include <sys/time.h>
 #include "filter.h"
 
 using namespace cv;

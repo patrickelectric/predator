@@ -85,14 +85,19 @@ int main(int argc, char *argv[])
 
 void *thread_analize(void *)
 {
+    struct timeval  now;        //tv_sec tv_usec
+    struct timespec timeout;    //tv_sec tv_nsec
     while(1)
     {
-        printf("frame %d\n",pthread_cond_wait(&cond[0], &mutex));
-        printf("show %d\n",pthread_cond_wait(&cond[1], &mutex));
+        gettimeofday(&now, NULL);
+        timeout.tv_sec = now.tv_sec + 1;
+        timeout.tv_nsec = (now.tv_usec)*1E3;
+        if(pthread_cond_timedwait(&cond[0], &mutex, &timeout))
+            printf("TIMEOUT streaming\n");
+        timeout.tv_sec = timeout.tv_sec + 1;
+        if(pthread_cond_timedwait(&cond[1], &mutex, &timeout))
+            printf("TIMEOUT show\n");
     }
-    //wait signal 1 for 0.1s else print and analize other
-    //signal 2
-    //signal 3
 }
 
 
@@ -134,7 +139,6 @@ void *image_show( void *)        /*analiza imagem*/
     sleep(1);
     while(1)
     {
-
         timer_image_show.a();
         pthread_mutex_lock(&in_frame);
         frameCopy=frame;
