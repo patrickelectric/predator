@@ -3,9 +3,13 @@
 
 
 /**********************MUTEX*********************/ 
+/*Frames*/
 pthread_mutex_t in_frame = PTHREAD_MUTEX_INITIALIZER;    
 pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; 
+
+/*Conditions and global variables */
+pthread_mutex_t mutex_freq_streaming = PTHREAD_MUTEX_INITIALIZER; 
+pthread_mutex_t mutex_freq_image_show = PTHREAD_MUTEX_INITIALIZER; 
 pthread_cond_t cond[2] = PTHREAD_COND_INITIALIZER;   
 /************************************************/  
 
@@ -16,10 +20,10 @@ void *thread_analize (void *);              //thread of frame analize
 void CallBackFunc(int event, int x, int y, int flags, void* userdata);    
 /********************FUNCTIONS*******************/
 
-VideoCapture cap;
-data_mouse mouseInfo;
-Mat frame;
-bool state=false;
+data_mouse mouseInfo;  
+VideoCapture cap;      // frame capture from camera
+Mat frame;             // the global image of camera
+float freq_to_analize[2];
 
 int main(int argc, char *argv[])
 {
@@ -87,16 +91,27 @@ void *thread_analize(void *)
 {
     struct timeval  now;        //tv_sec tv_usec
     struct timespec timeout;    //tv_sec tv_nsec
+    float freq[2];
     while(1)
     {
         gettimeofday(&now, NULL);
+
         timeout.tv_sec = now.tv_sec + 1;
         timeout.tv_nsec = (now.tv_usec)*1E3;
-        if(pthread_cond_timedwait(&cond[0], &mutex, &timeout))
+
+        if(pthread_cond_timedwait(&cond[0], &mutex_freq_streaming, &timeout))
             printf("TIMEOUT streaming\n");
+        else
+            freq[0]=freq_to_analize[0];
+
         timeout.tv_sec = timeout.tv_sec + 1;
-        if(pthread_cond_timedwait(&cond[1], &mutex, &timeout))
+        if(pthread_cond_timedwait(&cond[1], &mutex_freq_image_show, &timeout))
             printf("TIMEOUT show\n");
+        else
+            freq[1]=freq_to_analize[1];
+
+        Caviso;  printf("Freq de streaming: %.2f\n",freq[0]); //end_fps();
+        Caviso;  printf("Freq de image_show: %.2f\n",freq[1]); //end_fps();
     }
 }
 
@@ -107,9 +122,11 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
     cv::Size s;
     s.width = 640;
     s.height  = 480;
-    
+    timer timer_streaming;
+    filterOrder1 filter;
     while(1)
     {
+        timer_streaming.a();
         pthread_mutex_lock(&in_frame);
         cap >> frame;
 
@@ -118,6 +135,7 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
         pthread_mutex_unlock(&in_frame);
         usleep(30);
         pthread_cond_signal(&cond[0]);
+        freq_to_analize[0] = 1/filter.filter(timer_streaming.b(),5*timer_streaming.b());
     }
     Cerro; printf("Streaming Down !\n");
     return NULL;
@@ -263,9 +281,6 @@ void *image_show( void *)        /*analiza imagem*/
         imshow("image_show",frameCopy);
         namedWindow("image_show", CV_WINDOW_NORMAL); 
         setMouseCallback("image_show", CallBackFunc, NULL);
-        
-        Caviso;  printf("Fps do image_show: %.2f\n",1/filter.filter(timer_image_show.b(),5*timer_image_show.b())); //end_fps();
-        Caviso;  printf("tempo de image_show: %f s \n",timer_image_show.b());
 
         // erro in some math loop ou analize
         if(1/filter.filter(timer_image_show.b(),5*timer_image_show.b())<4)
@@ -274,13 +289,13 @@ void *image_show( void *)        /*analiza imagem*/
         }
         waitKey(30);
         pthread_cond_signal(&cond[1]);
-        //pthread_mutex_unlock(&in_window);
-        
+        freq_to_analize[1]=1/filter.filter(timer_image_show.b(),5*timer_image_show.b());        
     }
     Cerro; printf("Image_show Down !\n");
     return NULL;
 }
 
+bool state=false;
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
     printf("callback\n");
