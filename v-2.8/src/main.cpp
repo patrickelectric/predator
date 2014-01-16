@@ -133,9 +133,8 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
         pthread_mutex_unlock(&in_frame);
-        usleep(30);
-        pthread_cond_signal(&cond[0]);
         freq_to_analize[0] = 1/filter.filter(timer_streaming.b(),5*timer_streaming.b());
+        pthread_cond_signal(&cond[0]);
     }
     Cerro; printf("Streaming Down !\n");
     return NULL;
@@ -170,6 +169,9 @@ void *image_show( void *)        /*analiza imagem*/
             Rect myDim(mouseInfo.x[0]-25,mouseInfo.y[0]-25, 50, 50);
             frameAnalize = frameCopy(myDim).clone();     
             frameAnalize.copyTo(frameAnalize);
+
+            filterx.number[0]=filterx.number[1]=alvof.x=mouseInfo.x[0];
+            filtery.number[0]=filtery.number[1]=alvof.y=mouseInfo.y[0];
         }
         else if(mouseInfo.event == -1)
         {
@@ -283,13 +285,13 @@ void *image_show( void *)        /*analiza imagem*/
         setMouseCallback("image_show", CallBackFunc, NULL);
 
         // erro in some math loop ou analize
-        if(1/filter.filter(timer_image_show.b(),5*timer_image_show.b())<4)
+        freq_to_analize[1]=1/filter.filter(timer_image_show.b(),5*timer_image_show.b());        
+        if(freq_to_analize[1] < 4.0)
         {
             Cerro; printf("ERROR DROP THE BASS\n");
         }
         waitKey(30);
         pthread_cond_signal(&cond[1]);
-        freq_to_analize[1]=1/filter.filter(timer_image_show.b(),5*timer_image_show.b());        
     }
     Cerro; printf("Image_show Down !\n");
     return NULL;

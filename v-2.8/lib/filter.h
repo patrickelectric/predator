@@ -6,9 +6,9 @@ class filterOrder1
 	private:
 		timer timer1;
 		bool  started;
-		double number[2];
 		
 	public:
+		double number[2];
 		filterOrder1() : started(false){};
 		double filter(double,double);
 };
