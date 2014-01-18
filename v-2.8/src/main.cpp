@@ -133,7 +133,7 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
         pthread_mutex_unlock(&in_frame);
-        usleep(1000 );
+        usleep(1000);
         freq_to_analize[0] = 1/filter.filter(timer_streaming.b(),5*timer_streaming.b());
         pthread_cond_signal(&cond[0]);
 

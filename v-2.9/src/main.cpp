@@ -28,6 +28,7 @@ Mat png_icons[3];      // save icons
 float freq_to_analize[2];     //save freq do analize
 string folder_png="../png/";  // save local of png folder
 string png_names[]={"mouse.png","red_circle.png"};
+bool mouse_on=false;
 /************************************************/
 
 int main(int argc, char *argv[])
@@ -75,8 +76,9 @@ int main(int argc, char *argv[])
         sleep(1);
     }
     /************************************************/ 
-    //png_icons[0] = imread(folder_png+png_names[0], CV_LOAD_IMAGE_COLOR);   // Read the file
-    //resize(png_icons[0], png_icons[0], Size(50, 50), 0, 0, INTER_CUBIC);
+    png_icons[0] = imread(folder_png+png_names[0], CV_LOAD_IMAGE_COLOR);   // Read the file
+    resize(png_icons[0], png_icons[0], Size(50, 50), 0, 0, INTER_CUBIC);
+    cvtColor(png_icons[0], png_icons[0], CV_RGB2GRAY);
     /************************************************/ 
 
     pthread_t get_img;
@@ -143,6 +145,7 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
         pthread_mutex_unlock(&in_frame);
         freq_to_analize[0] = 1/filter.filter(timer_streaming.b(),5*timer_streaming.b());
         pthread_cond_signal(&cond[0]);
+        usleep(1000);
     }
     Cerro; printf("Streaming Down !\n");
     return NULL;
@@ -228,24 +231,36 @@ void *image_show( void *)        /*analiza imagem*/
             { matchLoc = minLoc; }
         else
             { matchLoc = maxLoc; }
-        
-        /// make a dif with the original and the matched
-        Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
-        Mat frameAnalizado = frameCopy(myDim2).clone(); 
-        Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
-        Mat frameAnalizadoFiltrado = frameCopy(myDim3).clone(); 
+    
+        /// cut the image to make something more.... cool        
+        if((alvo.x-25>0 && alvo.y-25>0) && (alvo.x+25<frameCopy.cols && alvo.y+25<frameCopy.rows))
+        {
+            Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
+            Mat frameAnalizado = frameCopy(myDim2).clone(); 
+            Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
+            frameAnalizado.copyTo( frameCopy( roi2 ) );
+            
+        }
 
-        /// cut the image to make something more.... cool
+        if ((alvof.x-25>0 && alvof.y-25>0) && (alvof.x+25<frameCopy.cols && alvof.y+25<frameCopy.rows))
+        {
+            Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
+            Mat frameAnalizadoFiltrado = frameCopy(myDim3).clone(); 
+            Rect roi3( Point( frameCopy.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
+            frameAnalizadoFiltrado.copyTo( frameCopy( roi3 ) );
+        }
+
         Rect roi1( Point( frameCopy.cols-frameAnalize.cols, 0 ), frameAnalize.size() );
         frameAnalize.copyTo( frameCopy( roi1 ) );
-        Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
-        frameAnalizado.copyTo( frameCopy( roi2 ) );
-        Rect roi3( Point( frameCopy.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
-        frameAnalizadoFiltrado.copyTo( frameCopy( roi3 ) );
+
         Rect roi4( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
         frameCopyReduzido.copyTo( frameCopy( roi4 ) );
-        Rect roi5( Point( 0, frameCopy.rows-png_icons[0].rows), png_icons[0].size() );
-        //png_icons[0].copyTo( frameCopy( roi5 ) );
+        if(mouse_on==true)
+        {
+            Rect roi5( Point( 0, frameCopy.rows-png_icons[0].rows), png_icons[0].size() );
+            png_icons[0].copyTo( frameCopy( roi5 ) );
+        }
+        mouse_on=false;
 
         // Translate matchCoord to Point
         alvo.x=matchLoc.x+origem.x+25;
@@ -309,7 +324,7 @@ void *image_show( void *)        /*analiza imagem*/
 bool state=false;
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 {
-    printf("callback\n");
+    mouse_on=true;
     mouseInfo.event=event;
     switch( event )
     {
