@@ -18,12 +18,17 @@ void *streaming(void *);                //thread of frame capture
 void *image_show (void *);              //thread of frame analize
 void *thread_analize (void *);              //thread of frame analize
 void CallBackFunc(int event, int x, int y, int flags, void* userdata);    
-/********************FUNCTIONS*******************/
+/************************************************/
 
+/********************VARIABLES*******************/
 data_mouse mouseInfo;  
 VideoCapture cap;      // frame capture from camera
 Mat frame;             // the global image of camera
-float freq_to_analize[2];
+Mat png_icons[3];      // save icons
+float freq_to_analize[2]; //save freq do analize
+string folder_png="../png/";
+string png_names[]={"mouse","red_circle"};
+/************************************************/
 
 int main(int argc, char *argv[])
 {
@@ -69,6 +74,8 @@ int main(int argc, char *argv[])
         }
         sleep(1);
     }
+    /************************************************/ 
+    png_icons[0] = imread(folder_png+png_names[0], CV_LOAD_IMAGE_COLOR);   // Read the file
     /************************************************/ 
 
     pthread_t get_img;
@@ -153,7 +160,6 @@ void *image_show( void *)        /*analiza imagem*/
     filterOrder1 filterx;
     filterOrder1 filtery;
     mouseInfo.event=-1;
-    sleep(1);
     while(1)
     {
         timer_image_show.a();
