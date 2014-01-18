@@ -25,9 +25,9 @@ data_mouse mouseInfo;
 VideoCapture cap;      // frame capture from camera
 Mat frame;             // the global image of camera
 Mat png_icons[3];      // save icons
-float freq_to_analize[2]; //save freq do analize
-string folder_png="../png/";
-string png_names[]={"mouse","red_circle"};
+float freq_to_analize[2];     //save freq do analize
+string folder_png="../png/";  // save local of png folder
+string png_names[]={"mouse.png","red_circle.png"};
 /************************************************/
 
 int main(int argc, char *argv[])
@@ -75,7 +75,8 @@ int main(int argc, char *argv[])
         sleep(1);
     }
     /************************************************/ 
-    png_icons[0] = imread(folder_png+png_names[0], CV_LOAD_IMAGE_COLOR);   // Read the file
+    //png_icons[0] = imread(folder_png+png_names[0], CV_LOAD_IMAGE_COLOR);   // Read the file
+    //resize(png_icons[0], png_icons[0], Size(50, 50), 0, 0, INTER_CUBIC);
     /************************************************/ 
 
     pthread_t get_img;
@@ -243,6 +244,8 @@ void *image_show( void *)        /*analiza imagem*/
         frameAnalizadoFiltrado.copyTo( frameCopy( roi3 ) );
         Rect roi4( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
         frameCopyReduzido.copyTo( frameCopy( roi4 ) );
+        Rect roi5( Point( 0, frameCopy.rows-png_icons[0].rows), png_icons[0].size() );
+        //png_icons[0].copyTo( frameCopy( roi5 ) );
 
         // Translate matchCoord to Point
         alvo.x=matchLoc.x+origem.x+25;
