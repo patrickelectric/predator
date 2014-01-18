@@ -153,7 +153,6 @@ void *image_show( void *)        /*analiza imagem*/
     filterOrder1 filterx;
     filterOrder1 filtery;
     mouseInfo.event=-1;
-    sleep(1);
     while(1)
     {
         timer_image_show.a();
