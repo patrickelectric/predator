@@ -133,8 +133,10 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
         pthread_mutex_unlock(&in_frame);
+        usleep(1000 );
         freq_to_analize[0] = 1/filter.filter(timer_streaming.b(),5*timer_streaming.b());
         pthread_cond_signal(&cond[0]);
+
     }
     Cerro; printf("Streaming Down !\n");
     return NULL;
@@ -159,7 +161,6 @@ void *image_show( void *)        /*analiza imagem*/
         pthread_mutex_lock(&in_frame);
         frameCopy=frame;
         pthread_mutex_unlock(&in_frame);
-
         
         if(mouseInfo.x[0] > 26 && mouseInfo.y[0] >26 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
@@ -175,8 +176,8 @@ void *image_show( void *)        /*analiza imagem*/
         else if(mouseInfo.event == -1)
         {
             Rect myDim(frameCopy.cols/2,frameCopy.rows/2, 50, 50);
-            alvo.x=alvof.x=frameCopy.cols/2;
-            alvo.y=alvof.y=frameCopy.rows/2;
+            filterx.number[0]=filterx.number[1]=alvo.x=alvof.x=frameCopy.cols/2;
+            filtery.number[0]=filtery.number[1]=alvo.y=alvof.y=frameCopy.rows/2;
             
             frameAnalize = frameCopy(myDim);     
             frameAnalize.copyTo(frameAnalize);
@@ -221,21 +222,30 @@ void *image_show( void *)        /*analiza imagem*/
         else
             { matchLoc = maxLoc; }
         
-        /// make a dif with the original and the matched
-        Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
-        Mat frameAnalizado = frameCopy(myDim2).clone(); 
-        Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
-        Mat frameAnalizadoFiltrado = frameCopy(myDim3).clone(); 
+        /// to solve some bugs
+        if((alvo.x-25>0 && alvo.y-25>0) && (alvo.x+25<frameCopy.cols && alvo.y+25<frameCopy.rows))
+        {
+            Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
+            Mat frameAnalizado = frameCopy(myDim2).clone(); 
+            Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
+            frameAnalizado.copyTo( frameCopy( roi2 ) );
+            
+        }
 
-        /// cut the image to make something more.... cool
+        if ((alvof.x-25>0 && alvof.y-25>0) && (alvof.x+25<frameCopy.cols && alvof.y+25<frameCopy.rows))
+        {
+            Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
+            Mat frameAnalizadoFiltrado = frameCopy(myDim3).clone(); 
+            Rect roi3( Point( frameCopy.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
+            frameAnalizadoFiltrado.copyTo( frameCopy( roi3 ) );
+        }
+        
         Rect roi1( Point( frameCopy.cols-frameAnalize.cols, 0 ), frameAnalize.size() );
         frameAnalize.copyTo( frameCopy( roi1 ) );
-        Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
-        frameAnalizado.copyTo( frameCopy( roi2 ) );
-        Rect roi3( Point( frameCopy.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
-        frameAnalizadoFiltrado.copyTo( frameCopy( roi3 ) );
+        
         Rect roi4( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
         frameCopyReduzido.copyTo( frameCopy( roi4 ) );
+        
 
         // Translate matchCoord to Point
         alvo.x=matchLoc.x+origem.x+25;
