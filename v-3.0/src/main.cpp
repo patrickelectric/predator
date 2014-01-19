@@ -10,7 +10,12 @@ pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;
 /*Conditions and global variables */
 pthread_mutex_t mutex_freq_streaming = PTHREAD_MUTEX_INITIALIZER; 
 pthread_mutex_t mutex_freq_image_show = PTHREAD_MUTEX_INITIALIZER; 
-pthread_cond_t cond[2] = PTHREAD_COND_INITIALIZER;   
+pthread_cond_t cond[2] = PTHREAD_COND_INITIALIZER;  
+
+/*Threads*/
+pthread_t get_img;
+pthread_t show_img;
+pthread_t thread_info; 
 /************************************************/  
 
 /********************FUNCTIONS*******************/
@@ -73,10 +78,6 @@ int main(int argc, char *argv[])
     }
     /************************************************/ 
 
-    pthread_t get_img;
-    pthread_t show_img;
-    pthread_t thread_info;
-
     pthread_create(&get_img, NULL, streaming , NULL);   //take image from camera or file
     pthread_create(&show_img, NULL, image_show , NULL); //take frame and analize
     pthread_create(&thread_info, NULL, thread_analize , NULL); //analize the threads
@@ -94,6 +95,7 @@ void *thread_analize(void *)
     struct timeval  now;        //tv_sec tv_usec
     struct timespec timeout;    //tv_sec tv_nsec
     float freq[2];
+    bool live=true;
     while(1)
     {
         gettimeofday(&now, NULL);
@@ -126,13 +128,19 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
     s.height  = 480;
     timer timer_streaming;
     filterOrder1 filter;
-    while(1)
+    bool live=true;
+    while(live)
     {
         timer_streaming.a();
         pthread_mutex_lock(&in_frame);
         cap >> frame;
         if(frame.empty())
+        {
+            live=false;
             printf("END OF THE FILM !\n");
+            pthread_cancel(show_img);
+            pthread_cancel(thread_info);
+        }
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
         pthread_mutex_unlock(&in_frame);
