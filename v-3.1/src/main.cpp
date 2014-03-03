@@ -1,4 +1,4 @@
-#include "../lib/lib.h"
+#include "lib.h"
 #define PTHREAD_THREADS_MAX 1024    //define o max de threads
 
 
@@ -10,7 +10,7 @@ pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;
 /*Conditions and global variables */
 pthread_mutex_t mutex_freq_streaming = PTHREAD_MUTEX_INITIALIZER; 
 pthread_mutex_t mutex_freq_image_show = PTHREAD_MUTEX_INITIALIZER; 
-pthread_cond_t cond[2] = PTHREAD_COND_INITIALIZER;  
+pthread_cond_t cond[2] = {PTHREAD_COND_INITIALIZER, PTHREAD_COND_INITIALIZER};  
 
 /*Threads*/
 pthread_t get_img;
@@ -31,6 +31,14 @@ Mat frame;             // the global image of camera
 float freq_to_analize[2];
 bool mouse_on=false;
 bool change_sample=false;
+
+void sleep(int time){
+#ifdef UNIX
+	sleep(time);
+#else
+	Sleep(time);
+#endif
+}
 
 int main(int argc, char *argv[])
 {
@@ -94,7 +102,7 @@ void *thread_analize(void *)
 {
     struct timeval  now;        //tv_sec tv_usec
     struct timespec timeout;    //tv_sec tv_nsec
-    float freq[2];
+	float freq[2] = {0, 0};
     bool live=true;
     while(1)
     {
@@ -102,12 +110,11 @@ void *thread_analize(void *)
 
         timeout.tv_sec = now.tv_sec + 1;
         timeout.tv_nsec = (now.tv_usec)*1E3;
-
-        if(pthread_cond_timedwait(&cond[0], &mutex_freq_streaming, &timeout))
+		if(pthread_cond_timedwait(&cond[0], &mutex_freq_streaming, &timeout))
             printf("TIMEOUT streaming\n");
         else
             freq[0]=freq_to_analize[0];
-
+		
         timeout.tv_sec = timeout.tv_sec + 1;
         if(pthread_cond_timedwait(&cond[1], &mutex_freq_image_show, &timeout))
             printf("TIMEOUT show\n");
@@ -144,7 +151,7 @@ void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
         pthread_mutex_unlock(&in_frame);
-        usleep(1000);
+        sleep(1);
         freq_to_analize[0] = 1/filter.filter(timer_streaming.b(),5*timer_streaming.b());
         pthread_cond_signal(&cond[0]);
 

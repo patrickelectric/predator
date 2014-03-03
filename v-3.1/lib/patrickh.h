@@ -1,6 +1,13 @@
+#ifdef WIN32
+  #include <time.h>
+#else // UNIX
+  #include <sys/time.h>
+#endif
+
+
 #include <iostream>
-#include <time.h>
-#include <sys/time.h>
+//#include <time.h>
+//#include <sys/time.h>
 #include <cstdio>
 #include <cstring>
 #include <opencv/cv.h>
