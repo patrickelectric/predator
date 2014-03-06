@@ -83,7 +83,6 @@ void *thread_analize(void *)
     struct timeval  now;        //tv_sec tv_usec
     struct timespec timeout;    //tv_sec tv_nsec
 	float freq = 0;
-    bool live=true;
     while(1)
     {
         gettimeofday(&now, NULL);
@@ -91,13 +90,15 @@ void *thread_analize(void *)
         timeout.tv_sec = now.tv_sec + 1;
         timeout.tv_nsec = (now.tv_usec)*1E3;
 
-        if(!pthread_cond_timedwait(&cond, &mutex_freq_image_show, &timeout))
+        if(pthread_cond_timedwait(&cond, &mutex_freq_image_show, &timeout))
             printf("TIMEOUT show\n");
         else
             freq=freq_to_analize;
 
         Caviso;  printf("Freq de image_show: %.2f\n",freq); //end_fps();
     }
+    Cerro; printf("Thread_analize Down !\n");
+    return NULL;
 }
 
 

@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
-#include "pthread_clock.h"
+#ifdef __gnu_linux__
+#else
+	#include "pthread_clock.h"
+#endif
 using namespace std;
 
 class timer

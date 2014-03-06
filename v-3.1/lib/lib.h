@@ -1,4 +1,4 @@
-#ifdef UNIX
+#ifdef __gnu_linux__
   //#include <time.h>
   #include <unistd.h>   /* UNIX standard function definitions */
   #include <sys/time.h>
@@ -23,6 +23,9 @@
 #include <fcntl.h>    /* File control definitions */
 #include <errno.h>    /* Error number definitions */
 
+#ifdef __gnu_linux__
+  #include "abstractlayer.h"
+#endif
 #include "filter.h"
 
 using namespace cv;
