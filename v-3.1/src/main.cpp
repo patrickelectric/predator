@@ -7,8 +7,8 @@
 pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;
 
 /*Conditions and global variables */
-pthread_mutex_t mutex_freq_image_show = PTHREAD_MUTEX_INITIALIZER; 
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;  
+pthread_mutex_t mutex_freq_image_show;
+pthread_cond_t cond;
 
 /*Threads*/
 pthread_t show_img;
@@ -69,6 +69,9 @@ int main(int argc, char *argv[])
         }
     }
     /************************************************/ 
+
+	pthread_cond_init(&cond, NULL);
+	pthread_mutex_init(&mutex_freq_image_show, NULL);
 
 	pthread_create(&show_img, NULL, image_show , NULL); //take frame and analize
 	pthread_create(&thread_info, NULL, thread_analize , NULL); //analize the threads
