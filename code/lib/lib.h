@@ -1,3 +1,16 @@
+#ifdef __gnu_linux__
+  //#include <time.h>
+  #include <unistd.h>   /* UNIX standard function definitions */
+  #include <sys/time.h>
+  #include <termios.h>  /* POSIX terminal control definitions */
+  #include <sys/ioctl.h>
+  #include <getopt.h>
+#else // WIN32
+  #include "pthread.h"
+  #include <windows.h>
+  #include "gettime.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -7,13 +20,12 @@
 #include "patrickh.h"
 #include <stdint.h>   /* Standard types */
 #include <string.h>   /* String function definitions */
-#include <unistd.h>   /* UNIX standard function definitions */
 #include <fcntl.h>    /* File control definitions */
 #include <errno.h>    /* Error number definitions */
-#include <termios.h>  /* POSIX terminal control definitions */
-#include <sys/ioctl.h>
-#include <getopt.h>
-#include <sys/time.h>
+
+#ifdef __gnu_linux__
+  #include "abstractlayer.h"
+#endif
 #include "filter.h"
 
 using namespace cv;

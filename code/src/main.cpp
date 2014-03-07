@@ -1,25 +1,21 @@
-#include "../lib/lib.h"
+#include "lib.h"
 #define PTHREAD_THREADS_MAX 1024    //define o max de threads
 
 
 /**********************MUTEX*********************/ 
 /*Frames*/
-pthread_mutex_t in_frame = PTHREAD_MUTEX_INITIALIZER;    
 pthread_mutex_t in_window = PTHREAD_MUTEX_INITIALIZER;
 
 /*Conditions and global variables */
-pthread_mutex_t mutex_freq_streaming = PTHREAD_MUTEX_INITIALIZER; 
-pthread_mutex_t mutex_freq_image_show = PTHREAD_MUTEX_INITIALIZER; 
-pthread_cond_t cond[2] = PTHREAD_COND_INITIALIZER;  
+pthread_mutex_t mutex_freq_image_show;
+pthread_cond_t cond;
 
 /*Threads*/
-pthread_t get_img;
 pthread_t show_img;
 pthread_t thread_info; 
 /************************************************/  
 
 /********************FUNCTIONS*******************/
-void *streaming(void *);                //thread of frame capture
 void *image_show (void *);              //thread of frame analize
 void *thread_analize (void *);              //thread of frame analize
 void CallBackFunc(int event, int x, int y, int flags, void* userdata);    
@@ -27,15 +23,14 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata);
 
 data_mouse mouseInfo;  
 VideoCapture cap;      // frame capture from camera
-Mat frame;             // the global image of camera
-float freq_to_analize[2];
+float freq_to_analize;
 bool mouse_on=false;
 bool change_sample=false;
+
 
 int main(int argc, char *argv[])
 {
     start_fps();
-    sleep(1);
 
     /*********************PARAMETROS*****************/  
     if(argc<2) 
@@ -50,8 +45,7 @@ int main(int argc, char *argv[])
         cap.open(idCamera);
         while(!cap.isOpened()) 
         {
-
-            Cerro;
+			Cerro;
             printf("Erro ao abrir a camera id %d!\n",idCamera);
             idCamera--;
             if(idCamera==-1)
@@ -59,7 +53,6 @@ int main(int argc, char *argv[])
             cap.release();
             cap.open(idCamera);
         }
-        sleep(1);
     }
     else
     {
@@ -74,19 +67,17 @@ int main(int argc, char *argv[])
             printf("Arquivo nao encontrado !\n");
             return -1;
         }
-        sleep(1);
     }
     /************************************************/ 
 
-    pthread_create(&get_img, NULL, streaming , NULL);   //take image from camera or file
-    pthread_create(&show_img, NULL, image_show , NULL); //take frame and analize
-    pthread_create(&thread_info, NULL, thread_analize , NULL); //analize the threads
+	pthread_cond_init(&cond, NULL);
+	pthread_mutex_init(&mutex_freq_image_show, NULL);
 
-    pthread_join(get_img,NULL); 
+	pthread_create(&show_img, NULL, image_show , NULL); //take frame and analize
+	pthread_create(&thread_info, NULL, thread_analize , NULL); //analize the threads
+
     pthread_join(show_img,NULL); 
     pthread_join(thread_info,NULL); 
-
-
 }
 
 
@@ -94,8 +85,7 @@ void *thread_analize(void *)
 {
     struct timeval  now;        //tv_sec tv_usec
     struct timespec timeout;    //tv_sec tv_nsec
-    float freq[2];
-    bool live=true;
+	float freq = 0;
     while(1)
     {
         gettimeofday(&now, NULL);
@@ -103,60 +93,29 @@ void *thread_analize(void *)
         timeout.tv_sec = now.tv_sec + 1;
         timeout.tv_nsec = (now.tv_usec)*1E3;
 
-        if(pthread_cond_timedwait(&cond[0], &mutex_freq_streaming, &timeout))
-            printf("TIMEOUT streaming\n");
-        else
-            freq[0]=freq_to_analize[0];
-
-        timeout.tv_sec = timeout.tv_sec + 1;
-        if(pthread_cond_timedwait(&cond[1], &mutex_freq_image_show, &timeout))
+        if(pthread_cond_timedwait(&cond, &mutex_freq_image_show, &timeout))
             printf("TIMEOUT show\n");
         else
-            freq[1]=freq_to_analize[1];
+            freq=freq_to_analize;
 
-        Caviso;  printf("Freq de streaming: %.2f\n",freq[0]); //end_fps();
-        Caviso;  printf("Freq de image_show: %.2f\n",freq[1]); //end_fps();
+        Caviso;  printf("Freq de image_show: %.2f\n",freq); //end_fps();
     }
-}
-
-
-
-void *streaming( void *)        /*pega imagem da camera ou do arquivo*/
-{
-    Size s;
-    s.width = 640;
-    s.height  = 480;
-    timer timer_streaming;
-    filterOrder1 filter;
-    bool live=true;
-    while(live)
-    {
-        timer_streaming.a();
-        pthread_mutex_lock(&in_frame);
-        cap >> frame;
-        if(frame.empty())
-        {
-            live=false;
-            printf("END OF THE FILM !\n");
-            pthread_cancel(show_img);
-            pthread_cancel(thread_info);
-        }
-        resize(frame, frame, s);
-        cvtColor(frame, frame, CV_RGB2GRAY);
-        pthread_mutex_unlock(&in_frame);
-        usleep(1000);
-        freq_to_analize[0] = 1/filter.filter(timer_streaming.b(),5*timer_streaming.b());
-        pthread_cond_signal(&cond[0]);
-
-    }
-    Cerro; printf("Streaming Down !\n");
+    Cerro; printf("Thread_analize Down !\n");
     return NULL;
 }
 
 
+
+bool live=false;
 void *image_show( void *)        /*analiza imagem*/
 {
-    Mat frameCopy;
+	/////
+	Size s;
+    s.width = 640;
+    s.height  = 480;
+	Mat frame;
+	/////
+
     Mat frameAnalize;
     Mat result;
     Point alvo;             // target coord
@@ -169,16 +128,31 @@ void *image_show( void *)        /*analiza imagem*/
     while(1)
     {
         timer_image_show.a();
-        pthread_mutex_lock(&in_frame);
-        frameCopy=frame;
-        pthread_mutex_unlock(&in_frame);
-        
-        if(mouseInfo.x[0]>25 && mouseInfo.y[0]>25 && mouseInfo.x[0]<frameCopy.cols-25 && mouseInfo.y[0]<frameCopy.rows-25 && mouseInfo.event==EVENT_LBUTTONDOWN)
+  		
+		cap >> frame;
+		
+        if(frame.empty()){
+			if (live){
+				printf("END OF THE FILM !\n");
+				if(pthread_kill(thread_info, 0) == 0)
+			  		pthread_cancel(thread_info);
+				break;
+			}
+  			continue;
+		}
+		
+		live = true;
+				
+		flip(frame,frame,1);
+        resize(frame, frame, s);
+        cvtColor(frame, frame, CV_RGB2GRAY);
+
+		if(mouseInfo.x[0]>25 && mouseInfo.y[0]>25 && mouseInfo.x[0]<frame.cols-25 && mouseInfo.y[0]<frame.rows-25 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
             change_sample=true;
             Cerro; printf("Change! \n");
             Rect myDim(mouseInfo.x[0]-25,mouseInfo.y[0]-25, 50, 50);
-            frameAnalize = frameCopy(myDim).clone();     
+            frameAnalize = frame(myDim).clone();     
             frameAnalize.copyTo(frameAnalize);
 
             filterx.number[0]=filterx.number[1]=alvof.x=mouseInfo.x[0];
@@ -186,18 +160,18 @@ void *image_show( void *)        /*analiza imagem*/
         }
         else if(mouseInfo.event == -1)
         {
-            Rect myDim(frameCopy.cols/2,frameCopy.rows/2, 50, 50);
-            filterx.number[0]=filterx.number[1]=alvo.x=alvof.x=frameCopy.cols/2;
-            filtery.number[0]=filtery.number[1]=alvo.y=alvof.y=frameCopy.rows/2;
+            Rect myDim(frame.cols/2,frame.rows/2, 50, 50);
+            filterx.number[0]=filterx.number[1]=alvo.x=alvof.x=frame.cols/2;
+            filtery.number[0]=filtery.number[1]=alvo.y=alvof.y=frame.rows/2;
             
-            frameAnalize = frameCopy(myDim);     
+            frameAnalize = frame(myDim);     
             frameAnalize.copyTo(frameAnalize);
             mouseInfo.event=-2;
         }
         
         /// Create the result matrix
-        int result_cols =  frameCopy.cols - frameAnalize.cols + 1;
-        int result_rows = frameCopy.rows - frameAnalize.rows + 1;
+        int result_cols =  frame.cols - frameAnalize.cols + 1;
+        int result_rows = frame.rows - frameAnalize.rows + 1;
         result.create( result_cols, result_rows, CV_32FC1 );
 
         /// Do the Matching and Normalize
@@ -218,12 +192,12 @@ void *image_show( void *)        /*analiza imagem*/
         }
 
         // to solve some problems with image size
-        if(origem.x+200>frameCopy.cols) origem.x=frameCopy.cols-200;
-        if(origem.y+200>frameCopy.rows) origem.y=frameCopy.rows-200;
+        if(origem.x+200>frame.cols) origem.x=frame.cols-200;
+        if(origem.y+200>frame.rows) origem.y=frame.rows-200;
         Rect Dim(origem.x,origem.y,200+origemAbs.x ,200+origemAbs.y);
-        Mat  frameCopyReduzido = frameCopy(Dim).clone();
+        Mat  frameReduzido = frame(Dim).clone();
         
-        matchTemplate( frameCopyReduzido, frameAnalize, result, match_method );
+        matchTemplate( frameReduzido, frameAnalize, result, match_method );
         normalize( result, result, 0, 1, NORM_MINMAX, -1, Mat() );
 
         /// Localizing the best match with minMaxLoc
@@ -239,31 +213,31 @@ void *image_show( void *)        /*analiza imagem*/
             { matchLoc = maxLoc; }
         
         /// to solve some bugs
-        if((alvo.x-25>0 && alvo.y-25>0) && (alvo.x+25<frameCopy.cols && alvo.y+25<frameCopy.rows))
+        if((alvo.x-25>0 && alvo.y-25>0) && (alvo.x+25<frame.cols && alvo.y+25<frame.rows))
         {
             Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
-            Mat frameAnalizado = frameCopy(myDim2).clone(); 
-            Rect roi2( Point( frameCopy.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
-            frameAnalizado.copyTo( frameCopy( roi2 ) );
+            Mat frameAnalizado = frame(myDim2).clone(); 
+            Rect roi2( Point( frame.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
+            frameAnalizado.copyTo( frame( roi2 ) );
             
         }
         
-        if ((alvof.x-25>0 && alvof.y-25>0) && (alvof.x+25<frameCopy.cols && alvof.y+25<frameCopy.rows))
+        if ((alvof.x-25>0 && alvof.y-25>0) && (alvof.x+25<frame.cols && alvof.y+25<frame.rows))
         {
             Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
-            Mat frameAnalizadoFiltrado = frameCopy(myDim3).clone(); 
-            Rect roi3( Point( frameCopy.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
-            frameAnalizadoFiltrado.copyTo( frameCopy( roi3 ) );
+            Mat frameAnalizadoFiltrado = frame(myDim3).clone(); 
+            Rect roi3( Point( frame.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
+            frameAnalizadoFiltrado.copyTo( frame( roi3 ) );
         }
         
-        Rect roi1( Point( frameCopy.cols-frameAnalize.cols, 0 ), frameAnalize.size() );
-        frameAnalize.copyTo( frameCopy( roi1 ) );
+        Rect roi1( Point( frame.cols-frameAnalize.cols, 0 ), frameAnalize.size() );
+        frameAnalize.copyTo( frame( roi1 ) );
         
-        Rect roi4( Point( frameCopy.cols-frameCopyReduzido.cols, frameCopy.rows-frameCopyReduzido.rows ), frameCopyReduzido.size() );
-        frameCopyReduzido.copyTo( frameCopy( roi4 ) );
+        Rect roi4( Point( frame.cols-frameReduzido.cols, frame.rows-frameReduzido.rows ), frameReduzido.size() );
+        frameReduzido.copyTo( frame( roi4 ) );
     
         // Translate matchCoord to Point
-        if(matchLoc.x+origem.x+25>0 && matchLoc.x+origem.x+25<frameCopy.cols && matchLoc.y+origem.y+25>0 && matchLoc.y+origem.y+25<frameCopy.rows)
+        if(matchLoc.x+origem.x+25>0 && matchLoc.x+origem.x+25<frame.cols && matchLoc.y+origem.y+25>0 && matchLoc.y+origem.y+25<frame.rows)
         {
             alvo.x=matchLoc.x+origem.x+25;
             alvo.y=matchLoc.y+origem.y+25;
@@ -276,13 +250,13 @@ void *image_show( void *)        /*analiza imagem*/
         {
             Cerro; printf("MATH ERROR (1)\n");
         }
-        if(alvo.x>frameCopy.cols || alvo.y>frameCopy.rows || alvof.x>frameCopy.cols || alvof.y>frameCopy.rows)
+        if(alvo.x>frame.cols || alvo.y>frame.rows || alvof.x>frame.cols || alvof.y>frame.rows)
         {
             Cerro; printf("MATH ERROR (2)\n");
         }
 
         #if 0
-            printf("framecopy: %d,%d\n",frameCopy.cols,frameCopy.rows);
+            printf("frame: %d,%d\n",frame.cols,frame.rows);
             printf("origem: %d,%d\n",origem.x,origem.y);
             printf("alvo: %d,%d\n",alvo.x,alvo.y);
             printf("alvof: %d,%d\n",alvof.x,alvof.y);
@@ -290,53 +264,53 @@ void *image_show( void *)        /*analiza imagem*/
         #endif
 
         /// Make the image colorful again
-        cvtColor(frameCopy, frameCopy, CV_GRAY2RGB);
+        cvtColor(frame, frame, CV_GRAY2RGB);
 
         /// make a circle in alvof 
-        circle(frameCopy, alvof, 3, cvScalar(0,0,255), 1, 8, 0);
+        circle(frame, alvof, 3, cvScalar(0,0,255), 1, 8, 0);
         /// Make a simple text to debug
         char str[256];
         sprintf(str, "x:%d/y:%d", alvof.x, alvof.y);
-        putText(frameCopy, str, cvPoint(alvof.x+30,alvof.y-30), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(0,0,255), 1, CV_AA);
+        putText(frame, str, cvPoint(alvof.x+30,alvof.y-30), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(0,0,255), 1, CV_AA);
 
         sprintf(str, "x:%d/y:%d", alvo.x, alvo.y);
-        putText(frameCopy, str, cvPoint(alvo.x+30,alvo.y+30), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(205,201,201), 1, CV_AA);
+        putText(frame, str, cvPoint(alvo.x+30,alvo.y+30), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(205,201,201), 1, CV_AA);
 
         sprintf(str, "maxVal:%.8f/minVal:%.8f", maxVal, minVal);
-        putText(frameCopy, str, cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.6, cvScalar(0,100,0), 1, CV_AA);
+        putText(frame, str, cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.6, cvScalar(0,100,0), 1, CV_AA);
 
         if(mouse_on)
         {
             sprintf(str, "MOUSE ON");
-            putText(frameCopy, str, cvPoint(30,60), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
+            putText(frame, str, cvPoint(30,60), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
             mouse_on=false;
         }
 
         if(change_sample)
         {
             sprintf(str, "SAMPLE CHANGED"   );
-            putText(frameCopy, str, cvPoint(30,90), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
+            putText(frame, str, cvPoint(30,90), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
             change_sample=false;
         }
-        freq_to_analize[1]=1/filter.filter(timer_image_show.b(),5*timer_image_show.b());        
+        freq_to_analize=1/filter.filter(timer_image_show.b(),5*timer_image_show.b());        
 
-        sprintf(str, "FPS: %.2f",freq_to_analize[1]);
-        putText(frameCopy, str, cvPoint(30,frameCopy.rows-30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, red, 1, CV_AA);
+        sprintf(str, "FPS: %.2f",freq_to_analize);
+        putText(frame, str, cvPoint(30,frame.rows-30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, red, 1, CV_AA);
 
         //draw lines     
-        line(frameCopy, Point (0,alvo.y), Point (frameCopy.cols,alvo.y), cvScalar(205,201,201), 1, 8, 0);
-        line(frameCopy, Point (alvo.x,0), Point (alvo.x,frameCopy.rows), cvScalar(205,201,201), 1, 8, 0);
+        line(frame, Point (0,alvo.y), Point (frame.cols,alvo.y), cvScalar(205,201,201), 1, 8, 0);
+        line(frame, Point (alvo.x,0), Point (alvo.x,frame.rows), cvScalar(205,201,201), 1, 8, 0);
 
-        imshow("image_show",frameCopy);
+        imshow("image_show",frame);
         namedWindow("image_show", CV_WINDOW_NORMAL); 
         setMouseCallback("image_show", CallBackFunc, NULL);
         // erro in some math loop ou analize
-        if(freq_to_analize[1] < 4.0)
+        if(freq_to_analize < 4.0)
         {
             Cerro; printf("ERROR DROP THE BASS\n");
         }
         waitKey(30);
-        pthread_cond_signal(&cond[1]);
+        pthread_cond_signal(&cond);
     }
     Cerro; printf("Image_show Down !\n");
     return NULL;

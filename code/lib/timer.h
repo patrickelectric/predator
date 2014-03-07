@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <iostream>
 #include <string.h>
+#ifdef __gnu_linux__
+#else
+	#include "pthread_clock.h"
+#endif
 using namespace std;
 
 class timer
@@ -53,12 +57,13 @@ double timer::b()
 
 double timer::end()
 {
-	if(ended==true)
+	if(ended)
 		return timeResut;
-	if(ended==false)
-		b();
+	else
+		return b();
 }
 void timer::clear()
 {
-	time_a.tv_sec=time_a.tv_nsec=time_b.tv_sec=time_b.tv_nsec=0;
+	time_a.tv_sec=time_b.tv_sec=0;
+	time_a.tv_nsec=time_b.tv_nsec=0;
 }
