@@ -4,10 +4,7 @@
   #include <sys/time.h>
 #endif
 
-
 #include <iostream>
-//#include <time.h>
-//#include <sys/time.h>
 #include <cstdio>
 #include <cstring>
 #include <opencv/cv.h>
@@ -68,11 +65,11 @@ void desenha_seta(Mat image, Point2f coco1, Point2f coco2,Scalar cor)
     line( image, coco1, coco2, cor);
     double Theta=atan2( (double) coco1.y - coco2.y, (double) coco1.x - coco2.x );
     double hypotenuse = 10;//sqrt( pow(coco1.y - coco2.y,2) + pow(coco1.x - coco2.x,2) );
-    coco1.x=(int)(hypotenuse*cos(Theta)/4-hypotenuse*sin(Theta)/4+coco2.x);
-    coco1.y=(int)(hypotenuse*sin(Theta)/4+hypotenuse*cos(Theta)/4+coco2.y);
+    coco1.x=(float)floor(hypotenuse*cos(Theta)/4-hypotenuse*sin(Theta)/4+coco2.x);
+    coco1.y=(float)floor(hypotenuse*sin(Theta)/4+hypotenuse*cos(Theta)/4+coco2.y);
     line(image,coco1,coco2,cor);  //Draw Line
-    coco1.x=(int)(hypotenuse*cos(Theta)/4+hypotenuse*sin(Theta)/4+coco2.x);
-    coco1.y=(int)(hypotenuse*sin(Theta)/4-hypotenuse*cos(Theta)/4+coco2.y);
+    coco1.x=(float)floor(hypotenuse*cos(Theta)/4+hypotenuse*sin(Theta)/4+coco2.x);
+    coco1.y=(float)floor(hypotenuse*sin(Theta)/4-hypotenuse*cos(Theta)/4+coco2.y);
     line(image,coco1,coco2,cor);  //Draw Lin
 }
 
