@@ -94,7 +94,7 @@ void *thread_analize(void *)
         timeout.tv_nsec = (now.tv_usec)*1E3;
 
         if(pthread_cond_timedwait(&cond, &mutex_freq_image_show, &timeout))
-            printf("TIMEOUT show\n");
+            {Cerro; printf("TIMEOUT show\n");}
         else
             freq=freq_to_analize;
 
