@@ -7,3 +7,7 @@ to open a file just run:
 
 $ ./main marisco.mp4
 
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/patrickelectric/predator/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
