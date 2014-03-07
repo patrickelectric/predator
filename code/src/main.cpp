@@ -91,7 +91,7 @@ void *thread_analize(void *)
         gettimeofday(&now, NULL);
 
         timeout.tv_sec = now.tv_sec + 1;
-        timeout.tv_nsec = (now.tv_usec)*1E3;
+        timeout.tv_nsec = (now.tv_usec)*1000;
 
         if(pthread_cond_timedwait(&cond, &mutex_freq_image_show, &timeout))
             {Cerro; printf("TIMEOUT show\n");}
@@ -241,8 +241,8 @@ void *image_show( void *)        /*analiza imagem*/
         {
             alvo.x=matchLoc.x+origem.x+25;
             alvo.y=matchLoc.y+origem.y+25;
-            alvof.x=filterx.filter(alvo.x,timer_image_show.end()*4);
-            alvof.y=filtery.filter(alvo.y,timer_image_show.end()*4);
+            alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*4);
+            alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*4);
         }
 
         // math erro
@@ -292,7 +292,7 @@ void *image_show( void *)        /*analiza imagem*/
             putText(frame, str, cvPoint(30,90), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
             change_sample=false;
         }
-        freq_to_analize=1/filter.filter(timer_image_show.b(),5*timer_image_show.b());        
+        freq_to_analize=(float)(1/filter.filter(timer_image_show.b(),5*timer_image_show.b()));        
 
         sprintf(str, "FPS: %.2f",freq_to_analize);
         putText(frame, str, cvPoint(30,frame.rows-30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, red, 1, CV_AA);
