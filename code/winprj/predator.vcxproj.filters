@@ -13,73 +13,49 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\pthreads">
-      <UniqueIdentifier>{0b9978ff-9533-4550-bff4-ad21e2751ea4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\pthreads">
-      <UniqueIdentifier>{2195a072-cfb1-451c-b93a-65b76221e198}</UniqueIdentifier>
+    <Filter Include="Source Files\pthread">
+      <UniqueIdentifier>{41c2bb85-7f21-4dd8-8475-758c235133e1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="pthread\src\barrier.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\clock.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\init.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\key.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\mutex.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\nanosleep.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\pthread.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\sched.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\sem.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\spin.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
-    <ClCompile Include="pthread\src\spin_rwlock.c">
-      <Filter>Source Files\pthreads</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="pthread\src\barrier.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\clock.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\init.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\key.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\mutex.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\nanosleep.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\pthread.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\sched.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\sem.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\spin.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
+    <ClCompile Include="pthread\src\spin_rwlock.c">
+      <Filter>Source Files\pthread</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pthread\include\arch.h">
-      <Filter>Header Files\pthreads</Filter>
-    </ClInclude>
-    <ClInclude Include="pthread\include\misc.h">
-      <Filter>Header Files\pthreads</Filter>
-    </ClInclude>
-    <ClInclude Include="pthread\include\pthread.h">
-      <Filter>Header Files\pthreads</Filter>
-    </ClInclude>
-    <ClInclude Include="pthread\include\pthread_clock.h">
-      <Filter>Header Files\pthreads</Filter>
-    </ClInclude>
-    <ClInclude Include="pthread\include\pthread_types.h">
-      <Filter>Header Files\pthreads</Filter>
-    </ClInclude>
-    <ClInclude Include="pthread\include\sched.h">
-      <Filter>Header Files\pthreads</Filter>
-    </ClInclude>
-    <ClInclude Include="pthread\include\semaphore.h">
-      <Filter>Header Files\pthreads</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\abstractlayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>

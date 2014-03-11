@@ -81,7 +81,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>pthreadVC2d.lib;opencv_core248d.lib;opencv_imgproc248d.lib;opencv_highgui248d.lib;opencv_ml248d.lib;opencv_video248d.lib;opencv_features2d248d.lib;opencv_calib3d248d.lib;opencv_objdetect248d.lib;opencv_contrib248d.lib;opencv_legacy248d.lib;opencv_flann248d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pthreadVC2.lib;opencv_core248d.lib;opencv_imgproc248d.lib;opencv_highgui248d.lib;opencv_ml248d.lib;opencv_video248d.lib;opencv_features2d248d.lib;opencv_calib3d248d.lib;opencv_objdetect248d.lib;opencv_contrib248d.lib;opencv_legacy248d.lib;opencv_flann248d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\winprj\pthread\lib;$(OPENCV_DIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -153,13 +153,6 @@
     <ClInclude Include="..\lib\lib.h" />
     <ClInclude Include="..\lib\patrickh.h" />
     <ClInclude Include="..\lib\timer.h" />
-    <ClInclude Include="pthread\include\arch.h" />
-    <ClInclude Include="pthread\include\misc.h" />
-    <ClInclude Include="pthread\include\pthread.h" />
-    <ClInclude Include="pthread\include\pthread_clock.h" />
-    <ClInclude Include="pthread\include\pthread_types.h" />
-    <ClInclude Include="pthread\include\sched.h" />
-    <ClInclude Include="pthread\include\semaphore.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
