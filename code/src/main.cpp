@@ -177,24 +177,18 @@ void *image_show( void *)        /*analiza imagem*/
         /// Do the Matching and Normalize
         int match_method=1; //1-5
         Point origem;
-        Point origemAbs;
         origem.x=alvof.x-100;
         origem.y=alvof.y-100;
         if(origem.x<0)
-        {
-            origemAbs.x=abs(origem.x);
             origem.x=0;
-        }
         if(origem.y<0)
-        {
-            origemAbs.y=abs(origem.y);
             origem.y=0;
-        }
 
         // to solve some problems with image size
         if(origem.x+200>frame.cols) origem.x=frame.cols-200;
         if(origem.y+200>frame.rows) origem.y=frame.rows-200;
-        Rect Dim(origem.x,origem.y,200+origemAbs.x ,200+origemAbs.y);
+
+        Rect Dim(origem.x,origem.y,200,200);
         Mat  frameReduzido = frame(Dim).clone();
         
         matchTemplate( frameReduzido, frameAnalize, result, match_method );
@@ -260,7 +254,7 @@ void *image_show( void *)        /*analiza imagem*/
             printf("origem: %d,%d\n",origem.x,origem.y);
             printf("alvo: %d,%d\n",alvo.x,alvo.y);
             printf("alvof: %d,%d\n",alvof.x,alvof.y);
-            printf("origemABS: %d,%d\n",origemAbs.x,origemAbs.y);
+            printf("origemABS: %d,%d\n",.x,.y);
         #endif
 
         /// Make the image colorful again
