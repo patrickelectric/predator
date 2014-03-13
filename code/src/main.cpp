@@ -146,6 +146,7 @@ void *image_show( void *)        /*analiza imagem*/
 		flip(frame,frame,1);
         resize(frame, frame, s);
         cvtColor(frame, frame, CV_RGB2GRAY);
+        detecCorners(frame,frame); //futura implementação por contornos
 
 		if(mouseInfo.x[0]>25 && mouseInfo.y[0]>25 && mouseInfo.x[0]<frame.cols-25 && mouseInfo.y[0]<frame.rows-25 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
@@ -177,12 +178,12 @@ void *image_show( void *)        /*analiza imagem*/
         /// Do the Matching and Normalize
         int match_method=1; //1-5
         Point origem;
-        origem.x=alvof.x-100;
-        origem.y=alvof.y-100;
+        origem.x=alvof.x-50;
+        origem.y=alvof.y-50;
         if(origem.x<0)
-            origem.x=0;
+            origem.x=alvo.x;
         if(origem.y<0)
-            origem.y=0;
+            origem.y=alvo.y;
 
         // to solve some problems with image size
         if(origem.x+200>frame.cols) origem.x=frame.cols-200;
@@ -207,19 +208,19 @@ void *image_show( void *)        /*analiza imagem*/
             { matchLoc = maxLoc; }
         
         /// to solve some bugs
+        Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
+        Mat frameAnalizado = frame(myDim2).clone();
         if((alvo.x-25>0 && alvo.y-25>0) && (alvo.x+25<frame.cols && alvo.y+25<frame.rows))
-        {
-            Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
-            Mat frameAnalizado = frame(myDim2).clone(); 
+        { 
             Rect roi2( Point( frame.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
             frameAnalizado.copyTo( frame( roi2 ) );
             
         }
         
+        Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
+        Mat frameAnalizadoFiltrado = frame(myDim3).clone(); 
         if ((alvof.x-25>0 && alvof.y-25>0) && (alvof.x+25<frame.cols && alvof.y+25<frame.rows))
         {
-            Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
-            Mat frameAnalizadoFiltrado = frame(myDim3).clone(); 
             Rect roi3( Point( frame.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
             frameAnalizadoFiltrado.copyTo( frame( roi3 ) );
         }
@@ -249,12 +250,12 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("MATH ERROR (2)\n");
         }
 
-        #if 0
-            printf("frame: %d,%d\n",frame.cols,frame.rows);
+        #if 1
+            printf("frame:  %d,%d\n",frame.cols,frame.rows);
             printf("origem: %d,%d\n",origem.x,origem.y);
-            printf("alvo: %d,%d\n",alvo.x,alvo.y);
-            printf("alvof: %d,%d\n",alvof.x,alvof.y);
-            printf("origemABS: %d,%d\n",.x,.y);
+            printf("alvo :  %d,%d\n",alvo.x,alvo.y);
+            printf("alvof:  %d,%d\n",alvof.x,alvof.y);
+            printf("diff :  %f\n",diffMat(frameAnalizado, frameAnalizadoFiltrado));
         #endif
 
         /// Make the image colorful again

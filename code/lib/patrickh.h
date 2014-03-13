@@ -98,3 +98,50 @@ void desenha_seta(Mat image, Point2f coco1, Point2f coco2,Scalar cor)
     printf("%swhite\n", KWHT);
     printf("%snormal\n", KNRM);
 */
+
+/// http://rosettacode.org/wiki/Percentage_difference_between_images
+float diffMat(Mat im1, Mat im2)
+{
+  float totalDiff=0.0f;
+  if ( (im1.cols != im2.cols) || (im1.rows !=im2.rows) )
+  {
+    printf("width/height of the images must match!\n");
+  } 
+  else 
+  {
+    /* BODY: the "real" part! */
+    for(int x=0; x < im1.rows; x++)
+    {
+      for(int y=0; y < im1.cols; y++)
+      {
+        totalDiff += (float)abs(im1.at<uchar>(x,y) - im2.at<uchar>(x,y))/255.0;
+      }
+    }
+  } 
+  return 100.0*totalDiff/(double)(im1.cols * im1.rows);
+}
+
+void detecCorners(Mat img, Mat& result)
+{   
+    #if 0
+    /// Detector parameters
+    int blockSize = 5;
+    int apertureSize = 6;
+    double k = 1;
+
+    /// Detecting corners
+    Mat dst;
+    cornerHarris( img, dst, blockSize, apertureSize, k, BORDER_DEFAULT );
+
+    /// Normalizing
+    Mat dst_norm;
+    normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
+    convertScaleAbs( dst_norm, result );
+    #else
+    #if 0
+    Canny( img, result, 4, 1, 3 );
+    #else
+    result=img.clone();
+    #endif
+    #endif
+}
