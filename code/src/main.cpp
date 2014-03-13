@@ -178,12 +178,14 @@ void *image_show( void *)        /*analiza imagem*/
         /// Do the Matching and Normalize
         int match_method=1; //1-5
         Point origem;
-        origem.x=alvof.x-50;
-        origem.y=alvof.y-50;
+        origem.x=alvof.x-100;
+        origem.y=alvof.y-100;
+        
         if(origem.x<0)
-            origem.x=alvo.x;
+            origem.x=0;
         if(origem.y<0)
-            origem.y=alvo.y;
+            origem.y=0;
+        
 
         // to solve some problems with image size
         if(origem.x+200>frame.cols) origem.x=frame.cols-200;
