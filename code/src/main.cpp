@@ -208,19 +208,21 @@ void *image_show( void *)        /*analiza imagem*/
             { matchLoc = maxLoc; }
         
         /// to solve some bugs
-        Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
-        Mat frameAnalizado = frame(myDim2).clone();
+        Mat frameAnalizado;
         if((alvo.x-25>0 && alvo.y-25>0) && (alvo.x+25<frame.cols && alvo.y+25<frame.rows))
         { 
+            Rect myDim2(alvo.x-25,alvo.y-25,50 , 50);
+            frameAnalizado = frame(myDim2).clone();
             Rect roi2( Point( frame.cols-frameAnalizado.cols, 50 ), frameAnalizado.size() );
             frameAnalizado.copyTo( frame( roi2 ) );
             
         }
         
-        Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
-        Mat frameAnalizadoFiltrado = frame(myDim3).clone(); 
+        Mat frameAnalizadoFiltrado;
         if ((alvof.x-25>0 && alvof.y-25>0) && (alvof.x+25<frame.cols && alvof.y+25<frame.rows))
         {
+            Rect myDim3(alvof.x-25,alvof.y-25,50 , 50);
+            frameAnalizadoFiltrado = frame(myDim3).clone(); 
             Rect roi3( Point( frame.cols-frameAnalizadoFiltrado.cols, 100 ), frameAnalizadoFiltrado.size() );
             frameAnalizadoFiltrado.copyTo( frame( roi3 ) );
         }
@@ -255,7 +257,8 @@ void *image_show( void *)        /*analiza imagem*/
             printf("origem: %d,%d\n",origem.x,origem.y);
             printf("alvo :  %d,%d\n",alvo.x,alvo.y);
             printf("alvof:  %d,%d\n",alvof.x,alvof.y);
-            printf("diff :  %f\n",diffMat(frameAnalizado, frameAnalizadoFiltrado));
+            if(!frameAnalizado.empty() || !frameAnalizadoFiltrado.empty())
+                printf("diff :  %f\n",diffMat(frameAnalizado, frameAnalizadoFiltrado));
         #endif
 
         /// Make the image colorful again
