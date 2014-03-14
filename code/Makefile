@@ -16,8 +16,9 @@ C_LIB += $(LIBDIR)/
 CC      = 	g++
 
 # compiler flags
-CFLAGS  =`pkg-config --libs --cflags opencv` 
+CFLAGS  = `pkg-config --libs --cflags opencv` 
 CFLAGS += -Wall -lpthread -Ofast -funroll-loops 
+CFLAGS += -Wno-write-strings -Wno-return-local-addr
 
 all:
 	$(CC) $^ $(C_SRC) -o $(OUTDIR)/main -I$(C_LIB) $(CFLAGS)

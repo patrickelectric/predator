@@ -22,6 +22,7 @@
 #include <string.h>   /* String function definitions */
 #include <fcntl.h>    /* File control definitions */
 #include <errno.h>    /* Error number definitions */
+#include "image.h"
 
 #ifdef __gnu_linux__
   #include "abstractlayer.h"
