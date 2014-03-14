@@ -147,7 +147,7 @@ void *image_show( void *)        /*analiza imagem*/
 		frame.Flip();
         frame.ScaleImg(1/(frame.img.cols/640));
         frame.ChangeColour(CV_RGB2GRAY);
-        //detecCorners(frame.img,frame.img); //futura implementação por contornos
+        detecCorners(frame.img,frame.img); //futura implementação por contornos
 
 		if(mouseInfo.x[0]>25 && mouseInfo.y[0]>25 && mouseInfo.x[0]<frame.img.cols-25 && mouseInfo.y[0]<frame.img.rows-25 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
@@ -232,8 +232,8 @@ void *image_show( void *)        /*analiza imagem*/
         {
             alvo.x=matchLoc.x+origem.x+25;
             alvo.y=matchLoc.y+origem.y+25;
-            alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*4);
-            alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*4);
+            alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*6);
+            alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*6);
         }
         /////////////////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +247,7 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("MATH ERROR (2)\n");
         }
 
-        #if 0
+        #if 1
             printf("frame:  %d,%d\n",frame.img.cols,frame.img.rows);
             printf("origem: %d,%d\n",origem.x,origem.y);
             printf("alvo :  %d,%d\n",alvo.x,alvo.y);

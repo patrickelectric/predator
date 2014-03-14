@@ -125,8 +125,8 @@ void detecCorners(Mat img, Mat& result)
 {   
     #if 0
     /// Detector parameters
-    int blockSize = 5;
-    int apertureSize = 6;
+    int blockSize = 2;
+    int apertureSize = 4;
     double k = 1;
 
     /// Detecting corners
@@ -139,7 +139,7 @@ void detecCorners(Mat img, Mat& result)
     convertScaleAbs( dst_norm, result );
     #else
     #if 0
-    Canny( img, result, 4, 1, 3 );
+    Canny( img, result, 4, 255, 3 );
     #else
     result=img.clone();
     #endif
