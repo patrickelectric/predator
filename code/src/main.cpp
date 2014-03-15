@@ -127,7 +127,6 @@ void *image_show( void *)        /*analiza imagem*/
         timer_image_show.a();
   		
 		cap >> frame.img;
-		printf("captura do frame\n");
         if(frame.img.empty())
         {
 			printf("END OF THE FILM !\n");
@@ -237,7 +236,7 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("MATH ERROR (2)\n");
         }
 
-        #if 1
+        #if 0
             printf("frame:  %d,%d\n",frame.img.cols,frame.img.rows);
             printf("origem: %d,%d\n",origem.x,origem.y);
             printf("alvo :  %d,%d\n",alvo.x,alvo.y);
