@@ -101,7 +101,10 @@ void *thread_analize(void *)
 void *image_show( void *)        /*analiza imagem*/
 {
     int scale=1; // mantem tamanho original
-    Size sample_size(50,50);
+    int dbt=30;  // distance_between_text
+    float min_fps=4.0; // fps minimo para aviso de queda de fps
+    Size sample_size(50,50);  // size of sample
+    Size aws(200,200); // analysis_window_size 
     bool change_sample=true;
     bool mouse_on=false;
 
@@ -168,8 +171,8 @@ void *image_show( void *)        /*analiza imagem*/
         /// Do the Matching and Normalize
         int match_method=1; //1-5
         Point origem;
-        origem.x=alvof.x-100;
-        origem.y=alvof.y-100;
+        origem.x=alvof.x-aws.width/2;
+        origem.y=alvof.y-aws.height/2;
         
         if(origem.x<0)
             origem.x=0;
@@ -178,11 +181,11 @@ void *image_show( void *)        /*analiza imagem*/
         
 
         // to solve some problems with image size
-        if(origem.x+200>frame.img.cols) origem.x=frame.img.cols-200;
-        if(origem.y+200>frame.img.rows) origem.y=frame.img.rows-200;
+        if(origem.x+aws.width>frame.img.cols) origem.x=frame.img.cols-aws.width;
+        if(origem.y+aws.height>frame.img.rows) origem.y=frame.img.rows-aws.height;
 
         Image  frameReduzido;
-        frameReduzido.PutPiece(frame.img, origem.x, origem.y,200,200);
+        frameReduzido.PutPiece(frame.img, Point(origem.x, origem.y),aws);
         
         matchTemplate( frameReduzido.img, frameAnalize.img, result.img, match_method );
         normalize( result.img, result.img, 0, 1, NORM_MINMAX, -1, Mat() );
@@ -204,17 +207,17 @@ void *image_show( void *)        /*analiza imagem*/
         if((alvo.x-sample_size.width/2>0 && alvo.y-sample_size.height/2>0) && (alvo.x+sample_size.width/2<frame.img.cols && alvo.y+sample_size.height/2<frame.img.rows))
         { 
             frameAnalizado.PutPiece(frame.img, Point(alvo.x-sample_size.width/2,alvo.y-sample_size.height/2), sample_size);
-            frameAnalizado.GetPiece(frame.img, Point(frame.img.cols-frameAnalizado.img.cols, 50) , sample_size);            
+            frameAnalizado.GetPiece(frame.img, Point(frame.img.cols-frameAnalizado.img.cols, sample_size.height*1), sample_size);            
         }
         
         Image frameAnalizadoFiltrado;
         if ((alvof.x-sample_size.width/2>0 && alvof.y-sample_size.height/2>0) && (alvof.x+sample_size.width/2<frame.img.cols && alvof.y+sample_size.height/2<frame.img.rows))
         {
             frameAnalizadoFiltrado.PutPiece(frame.img, Point(alvof.x-sample_size.width/2,alvof.y-sample_size.height/2), sample_size);
-            frameAnalizadoFiltrado.GetPiece(frame.img, Point(frame.img.cols-frameAnalizadoFiltrado.img.cols, 100 ), sample_size);
+            frameAnalizadoFiltrado.GetPiece(frame.img, Point(frame.img.cols-frameAnalizadoFiltrado.img.cols, sample_size.height*2), sample_size);
         }
 
-        frameAnalize.GetPiece(frame.img, Point(frame.img.cols-frameAnalize.img.cols, 0), sample_size);
+        frameAnalize.GetPiece(frame.img, Point(frame.img.cols-frameAnalize.img.cols, sample_size.height*0), sample_size);
         frameReduzido.GetPiece(frame.img, Point(frame.img.cols-frameReduzido.img.cols, frame.img.rows-frameReduzido.img.rows), Size(frameReduzido.img.cols, frameReduzido.img.rows));
     
         // Translate matchCoord to Point
@@ -253,32 +256,32 @@ void *image_show( void *)        /*analiza imagem*/
         /// Make a simple text to debug
         char str[256];
         sprintf(str, "x:%d/y:%d", alvof.x, alvof.y);
-        putText(frame.img, str, cvPoint(alvof.x+30,alvof.y-30), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(0,0,255), 1, CV_AA);
+        putText(frame.img, str, cvPoint(alvof.x+dbt,alvof.y-dbt), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(0,0,255), 1, CV_AA);
 
         sprintf(str, "x:%d/y:%d", alvo.x, alvo.y);
-        putText(frame.img, str, cvPoint(alvo.x+30,alvo.y+30), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(205,201,201), 1, CV_AA);
+        putText(frame.img, str, cvPoint(alvo.x+dbt,alvo.y+dbt), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(205,201,201), 1, CV_AA);
 
         sprintf(str, "maxVal:%.8f/minVal:%.8f", maxVal, minVal);
-        putText(frame.img, str, cvPoint(30,30), FONT_HERSHEY_COMPLEX_SMALL, 0.6, cvScalar(0,100,0), 1, CV_AA);
+        putText(frame.img, str, cvPoint(dbt,dbt*1), FONT_HERSHEY_COMPLEX_SMALL, 0.6, cvScalar(0,100,0), 1, CV_AA);
 
         if(mouse_on)
         {
             sprintf(str, "MOUSE ON");
-            putText(frame.img, str, cvPoint(30,60), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
+            putText(frame.img, str, cvPoint(dbt,dbt*2), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
             mouse_on=false;
         }
 
         if(change_sample)
         {
-            sprintf(str, "SAMPLE CHANGED"   );
-            putText(frame.img, str, cvPoint(30,90), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
+            sprintf(str, "SAMPLE CHANGED" );
+            putText(frame.img, str, cvPoint(dbt,dbt*3), FONT_HERSHEY_COMPLEX_SMALL, 0.6, red, 1, CV_AA);
             change_sample=false;
         }
 
         freq_to_analize=(float)(1/filter.filter(timer_image_show.b(),5*timer_image_show.b()));        
 
         sprintf(str, "FPS: %.2f",freq_to_analize);
-        putText(frame.img, str, cvPoint(30,frame.img.rows-30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, red, 1, CV_AA);
+        putText(frame.img, str, cvPoint(dbt,frame.img.rows-dbt), FONT_HERSHEY_COMPLEX_SMALL, 0.8, red, 1, CV_AA);
 
         //draw lines     
         line(frame.img, Point (0,alvo.y), Point (frame.img.cols,alvo.y), cvScalar(205,201,201), 1, 8, 0);
@@ -296,7 +299,7 @@ void *image_show( void *)        /*analiza imagem*/
         }
 
         // erro in some math loop ou analize
-        if(freq_to_analize < 4.0)
+        if(freq_to_analize < min_fps)
         {
             Cerro; printf("ERROR DROP THE BASS\n");
         }
