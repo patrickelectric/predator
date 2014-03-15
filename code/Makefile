@@ -19,6 +19,7 @@ CC      = 	g++
 CFLAGS  = `pkg-config --libs --cflags opencv` 
 CFLAGS += -Wall -lpthread -Ofast -funroll-loops 
 CFLAGS += -Wno-write-strings -Wno-return-local-addr
+CFLAGS += -g
 
 all:
 	$(CC) $^ $(C_SRC) -o $(OUTDIR)/main -I$(C_LIB) $(CFLAGS)

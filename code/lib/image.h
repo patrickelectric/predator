@@ -70,9 +70,6 @@ void Image::GetPiece(Mat& piece, int x,int y,int cols, int rows)
 {
     Rect Dim(x, y, cols, rows);
     img.copyTo(piece(Dim));
-
-    //Rect roi2( Point( frame.img.cols-frameAnalizado.img.cols, 50 ), frameAnalizado.img.size() );
-    //frameAnalizado.img.copyTo( frame.img( roi2 ) )
 }
 
 char Image::Show()

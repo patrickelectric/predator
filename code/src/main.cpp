@@ -21,12 +21,8 @@ void *thread_analize (void *);              //thread of frame analize
 void CallBackFunc(int event, int x, int y, int flags, void* userdata);    
 /********************FUNCTIONS*******************/
 
-data_mouse mouseInfo;  
 VideoCapture cap;      // frame capture from camera
 float freq_to_analize;
-bool mouse_on=false;
-bool change_sample=false;
-
 
 int main(int argc, char *argv[])
 {
@@ -102,15 +98,11 @@ void *thread_analize(void *)
 }
 
 
-
-bool live=false;
 void *image_show( void *)        /*analiza imagem*/
 {
-	/////
-	Size s;
-    s.width = 640;
-    s.height  = 480;
-	/////
+    int scale=1; // 640x480
+    bool change_sample=true;
+    bool mouse_on=false;
 
     Image frame;
     Image frameAnalize;
@@ -118,12 +110,16 @@ void *image_show( void *)        /*analiza imagem*/
     
     Point alvo;             // target coord
     Point alvof;            // target coord  with filter
+
     timer timer_image_show;
 
     filterOrder1 filter;
     filterOrder1 filterx;
     filterOrder1 filtery;
 
+    data_mouse mouseInfo; 
+    mouseInfo.x[0]=310;
+    mouseInfo.y[0]=240; 
     mouseInfo.event=-1;
     while(1)
     {
@@ -131,27 +127,23 @@ void *image_show( void *)        /*analiza imagem*/
         timer_image_show.a();
   		
 		cap >> frame.img;
-		
-        if(frame.img.empty()){
-			if (live){
-				printf("END OF THE FILM !\n");
-				if(pthread_kill(thread_info, 0) == 0)
-			  		pthread_cancel(thread_info);
-				break;
-			}
-  			continue;
+		printf("captura do frame\n");
+        if(frame.img.empty())
+        {
+			printf("END OF THE FILM !\n");
+			if(pthread_kill(thread_info, 0) == 0)
+		  		pthread_cancel(thread_info);
+			break;
 		}
-		
-		live = true;  //<< melhorar isso
 				
 		frame.Flip();
-        frame.ScaleImg(1/(frame.img.cols/640));
+        frame.ScaleImg(scale);
         frame.ChangeColour(CV_RGB2GRAY);
         detecCorners(frame.img,frame.img); //futura implementação por contornos
 
 		if(mouseInfo.x[0]>25 && mouseInfo.y[0]>25 && mouseInfo.x[0]<frame.img.cols-25 && mouseInfo.y[0]<frame.img.rows-25 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
-            change_sample=true;  //<< melhorar isso
+            change_sample=true;  
             Cerro; printf("Change! \n");
             frameAnalize.PutPiece(frame.img, mouseInfo.x[0]-25,mouseInfo.y[0]-25, 50, 50);
 
@@ -165,8 +157,6 @@ void *image_show( void *)        /*analiza imagem*/
 
             filterx.number[0]=filterx.number[1]=alvo.x=alvof.x=frame.img.cols/2;
             filtery.number[0]=filtery.number[1]=alvo.y=alvof.y=frame.img.rows/2;
-            
-            mouseInfo.event=-2; //<< melhorar isso
         }
         /////////////////////////////////////////////////////////////////////////////////////
         
