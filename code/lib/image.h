@@ -26,6 +26,7 @@ class Image
     void PutPiece(Mat src, int x,int y,int cols, int rows);
     void PutPiece(Mat src, Point point, Size size);
     void GetPiece(Mat& piece, int x,int y,int cols, int rows);
+    void GetPiece(Mat& piece, Point point, Size size);
     char Show();
 };
 
@@ -69,6 +70,12 @@ void Image::PutPiece(Mat src, Point point, Size size)
 void Image::GetPiece(Mat& piece, int x,int y,int cols, int rows)
 {
     Rect Dim(x, y, cols, rows);
+    img.copyTo(piece(Dim));
+}
+
+void Image::GetPiece(Mat& piece, Point point, Size size)
+{
+    Rect Dim(point.x, point.y, size.width, size.height);
     img.copyTo(piece(Dim));
 }
 

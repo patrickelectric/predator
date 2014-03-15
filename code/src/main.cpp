@@ -100,7 +100,8 @@ void *thread_analize(void *)
 
 void *image_show( void *)        /*analiza imagem*/
 {
-    int scale=1; // 640x480
+    int scale=1; // mantem tamanho original
+    Size sample_size(50,50);
     bool change_sample=true;
     bool mouse_on=false;
 
@@ -140,19 +141,19 @@ void *image_show( void *)        /*analiza imagem*/
         frame.ChangeColour(CV_RGB2GRAY);
         detecCorners(frame.img,frame.img); //futura implementação por contornos
 
-		if(mouseInfo.x[0]>25 && mouseInfo.y[0]>25 && mouseInfo.x[0]<frame.img.cols-25 && mouseInfo.y[0]<frame.img.rows-25 && mouseInfo.event==EVENT_LBUTTONDOWN)
+		if(mouseInfo.x[0]>sample_size.width/2 && mouseInfo.y[0]>sample_size.height/2 && mouseInfo.x[0]<frame.img.cols-sample_size.width/2 && mouseInfo.y[0]<frame.img.rows-sample_size.height/2 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
             change_sample=true;  
             Cerro; printf("Change! \n");
-            frameAnalize.PutPiece(frame.img, mouseInfo.x[0]-25,mouseInfo.y[0]-25, 50, 50);
+            frameAnalize.PutPiece(frame.img, Point(mouseInfo.x[0]-sample_size.width/2,mouseInfo.y[0]-sample_size.height/2), sample_size);
 
             filterx.number[0]=filterx.number[1]=alvof.x=mouseInfo.x[0];
             filtery.number[0]=filtery.number[1]=alvof.y=mouseInfo.y[0];
         }
         else if(mouseInfo.event == -1)
         {
-            Rect myDim(frame.img.cols/2,frame.img.rows/2, 50, 50);
-            frameAnalize.PutPiece(frame.img, frame.img.cols/2,frame.img.rows/2, 50, 50);  
+            Rect myDim(Point(frame.img.cols/2,frame.img.rows/2),sample_size);
+            frameAnalize.PutPiece(frame.img, Point(frame.img.cols/2,frame.img.rows/2), sample_size);  
 
             filterx.number[0]=filterx.number[1]=alvo.x=alvof.x=frame.img.cols/2;
             filtery.number[0]=filtery.number[1]=alvo.y=alvof.y=frame.img.rows/2;
@@ -200,27 +201,27 @@ void *image_show( void *)        /*analiza imagem*/
         
         /// to solve some bugs
         Image frameAnalizado;
-        if((alvo.x-25>0 && alvo.y-25>0) && (alvo.x+25<frame.img.cols && alvo.y+25<frame.img.rows))
+        if((alvo.x-sample_size.width/2>0 && alvo.y-sample_size.height/2>0) && (alvo.x+sample_size.width/2<frame.img.cols && alvo.y+sample_size.height/2<frame.img.rows))
         { 
-            frameAnalizado.PutPiece(frame.img, alvo.x-25,alvo.y-25,50 , 50);
-            frameAnalizado.GetPiece(frame.img, frame.img.cols-frameAnalizado.img.cols, 50 , frameAnalizado.img.cols, frameAnalizado.img.rows);            
+            frameAnalizado.PutPiece(frame.img, Point(alvo.x-sample_size.width/2,alvo.y-sample_size.height/2), sample_size);
+            frameAnalizado.GetPiece(frame.img, Point(frame.img.cols-frameAnalizado.img.cols, 50) , sample_size);            
         }
         
         Image frameAnalizadoFiltrado;
-        if ((alvof.x-25>0 && alvof.y-25>0) && (alvof.x+25<frame.img.cols && alvof.y+25<frame.img.rows))
+        if ((alvof.x-sample_size.width/2>0 && alvof.y-sample_size.height/2>0) && (alvof.x+sample_size.width/2<frame.img.cols && alvof.y+sample_size.height/2<frame.img.rows))
         {
-            frameAnalizadoFiltrado.PutPiece(frame.img, alvof.x-25,alvof.y-25,50 , 50);
-            frameAnalizadoFiltrado.GetPiece(frame.img, frame.img.cols-frameAnalizadoFiltrado.img.cols, 100 , frameAnalizadoFiltrado.img.cols, frameAnalizadoFiltrado.img.rows);
+            frameAnalizadoFiltrado.PutPiece(frame.img, Point(alvof.x-sample_size.width/2,alvof.y-sample_size.height/2), sample_size);
+            frameAnalizadoFiltrado.GetPiece(frame.img, Point(frame.img.cols-frameAnalizadoFiltrado.img.cols, 100 ), sample_size);
         }
 
-        frameAnalize.GetPiece(frame.img, frame.img.cols-frameAnalize.img.cols, 0 , frameAnalize.img.cols, frameAnalize.img.rows);
-        frameReduzido.GetPiece(frame.img, frame.img.cols-frameReduzido.img.cols, frame.img.rows-frameReduzido.img.rows , frameReduzido.img.cols, frameReduzido.img.rows);
+        frameAnalize.GetPiece(frame.img, Point(frame.img.cols-frameAnalize.img.cols, 0), sample_size);
+        frameReduzido.GetPiece(frame.img, Point(frame.img.cols-frameReduzido.img.cols, frame.img.rows-frameReduzido.img.rows), Size(frameReduzido.img.cols, frameReduzido.img.rows));
     
         // Translate matchCoord to Point
-        if(matchLoc.x+origem.x+25>0 && matchLoc.x+origem.x+25<frame.img.cols && matchLoc.y+origem.y+25>0 && matchLoc.y+origem.y+25<frame.img.rows)
+        if(matchLoc.x+origem.x+sample_size.width/2>0 && matchLoc.x+origem.x+sample_size.width/2<frame.img.cols && matchLoc.y+origem.y+sample_size.height/2>0 && matchLoc.y+origem.y+sample_size.height/2<frame.img.rows)
         {
-            alvo.x=matchLoc.x+origem.x+25;
-            alvo.y=matchLoc.y+origem.y+25;
+            alvo.x=matchLoc.x+origem.x+sample_size.width/2;
+            alvo.y=matchLoc.y+origem.y+sample_size.height/2;
             alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*6);
             alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*6);
         }
