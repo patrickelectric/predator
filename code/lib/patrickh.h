@@ -197,3 +197,8 @@ void MatHistogram(Mat src, Mat& histImage)
 
   /// Display
 }
+
+int DistTwoPoints(Point a, Point b)
+{
+    return sqrt(pow(abs(a.x-b.x),2)+pow(abs(a.y-b.y),2));
+}

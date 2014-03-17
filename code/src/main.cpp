@@ -1,6 +1,17 @@
 #include "lib.h"
 #define PTHREAD_THREADS_MAX 1024    //define o max de threads
 
+//sistema de tracking em testes
+#define tracking_low_speed 0            //ativa funcao de tracking em testes //0-1
+#define circle_radius  10           //define o valor de raio do circulo de analize
+#define diff_percent   6            //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
+
+//debug
+#define histogram      1            //ativa janelas de histograma        //0-1
+#define print_image_data      1     //ativa print de image data          //0-1
+#define print_mouse_data      0     //ativa print de mouse data          //0-1
+
+#define sample_size_pixels    50    //declara o tamanho do sample de amostra (50 default)
 
 /**********************MUTEX*********************/ 
 /*Frames*/
@@ -102,18 +113,21 @@ void *image_show( void *)        /*analiza imagem*/
 {
     int scale=1; // mantem tamanho original
     int dbt=30;  // distance_between_text
+    int dist_filter=10; // filtro de area
     float min_fps=4.0; // fps minimo para aviso de queda de fps
-    Size sample_size(50,50);  // size of sample
-    Size aws(200,200); // analysis_window_size 
+    Size sample_size(sample_size_pixels,sample_size_pixels);  // size of sample
+    Size aws(sample_size_pixels*4,sample_size_pixels*4); // analysis_window_size 
     bool change_sample=true;
     bool mouse_on=false;
 
     Image frame;
     Image frameAnalize;
+    Image frameAnalizado;
     Image result;
     
     Point alvo;             // target coord
     Point alvof;            // target coord  with filter
+    Point last_alvo;
 
     timer timer_image_show;
 
@@ -125,6 +139,7 @@ void *image_show( void *)        /*analiza imagem*/
     mouseInfo.x[0]=310;
     mouseInfo.y[0]=240; 
     mouseInfo.event=-1;
+
     while(1)
     {
         /////////////////////////////////////////////////////////////////////////////////////
@@ -161,6 +176,12 @@ void *image_show( void *)        /*analiza imagem*/
             filterx.number[0]=filterx.number[1]=alvo.x=alvof.x=frame.img.cols/2;
             filtery.number[0]=filtery.number[1]=alvo.y=alvof.y=frame.img.rows/2;
         }
+        #if tracking_low_speed
+            else if (alvo.x>sample_size.width/2 && alvo.y>sample_size.height/2 && alvo.x<frame.img.cols-sample_size.width/2 && alvo.y<frame.img.rows-sample_size.height/2 && diffMat(frameAnalizado.img, frameAnalize.img)>diff_percent && DistTwoPoints(alvo,last_alvo)<dist_filter)
+            {
+                frameAnalize.PutPiece(frame.img, Point(alvo.x-sample_size.width/2, alvo.y-sample_size.height/2), sample_size);
+            }
+        #endif
         /////////////////////////////////////////////////////////////////////////////////////
         
         /// Create the result matrix
@@ -201,9 +222,8 @@ void *image_show( void *)        /*analiza imagem*/
             { matchLoc = minLoc; }
         else
             { matchLoc = maxLoc; }
-        
+
         /// to solve some bugs
-        Image frameAnalizado;
         if((alvo.x-sample_size.width/2>0 && alvo.y-sample_size.height/2>0) && (alvo.x+sample_size.width/2<frame.img.cols && alvo.y+sample_size.height/2<frame.img.rows))
         { 
             frameAnalizado.PutPiece(frame.img, Point(alvo.x-sample_size.width/2,alvo.y-sample_size.height/2), sample_size);
@@ -223,10 +243,31 @@ void *image_show( void *)        /*analiza imagem*/
         // Translate matchCoord to Point
         if(matchLoc.x+origem.x+sample_size.width/2>0 && matchLoc.x+origem.x+sample_size.width/2<frame.img.cols && matchLoc.y+origem.y+sample_size.height/2>0 && matchLoc.y+origem.y+sample_size.height/2<frame.img.rows)
         {
+
+            if(mouseInfo.event != -1) // primeiro evento
+                last_alvo=alvo;
+
             alvo.x=matchLoc.x+origem.x+sample_size.width/2;
             alvo.y=matchLoc.y+origem.y+sample_size.height/2;
-            alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*6);
-            alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*6);
+
+            // filter of distance
+            #if tracking_speed
+                if(DistTwoPoints(alvo, last_alvo) < dist_filter || mouseInfo.event == 1 ) // se estiver dentro da area ou sample change
+                {
+                    alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*10);
+                    alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*10);
+                }
+                else
+                {
+                    alvo=last_alvo;
+
+                    alvof.x=(int)filterx.filter(last_alvo.x,timer_image_show.end()*10);
+                    alvof.y=(int)filtery.filter(last_alvo.y,timer_image_show.end()*10);
+                }
+            #else
+                alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*10);
+                alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*10);
+            #endif
         }
         /////////////////////////////////////////////////////////////////////////////////////
 
@@ -240,21 +281,30 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("MATH ERROR (2)\n");
         }
 
-        #if 0
+        #if print_image_data
             printf("frame:  %d,%d\n",frame.img.cols,frame.img.rows);
             printf("origem: %d,%d\n",origem.x,origem.y);
             printf("alvo :  %d,%d\n",alvo.x,alvo.y);
             printf("alvof:  %d,%d\n",alvof.x,alvof.y);
             if(!frameAnalizado.img.empty() || !frameAnalizadoFiltrado.img.empty())
-                printf("diff :  %f\n",diffMat(frameAnalizado.img, frameAnalizadoFiltrado.img));
+                printf("diffF:  %f\n",diffMat(frameAnalizado.img, frameAnalizadoFiltrado.img));
+            if(!frameAnalizado.img.empty() || !frameAnalizadoFiltrado.img.empty())
+                printf("diff :  %f\n",diffMat(frameAnalizado.img, frameAnalize.img));
         #endif
+
+        #if print_mouse_data
+            printf("mouse_click :  %d,%d\n",mouseInfo.x[0],mouseInfo.y[0]);
+            printf("mouse       :  %d,%d\n",mouseInfo.x[1],mouseInfo.y[1]);
+            printf("event       :  %d\n",mouseInfo.event);
+        #endif    
 
         /// Make the image colorful again
         frame.ChangeColour(CV_GRAY2RGB);
         /// make a circle in alvof 
         circle(frame.img, alvof, 3, cvScalar(0,0,255), 1, 8, 0);
         /// make a circle of R = dist of alvof and alvo 
-        circle(frame.img, alvo, sqrt(pow(abs(alvof.x-alvo.x),2)+pow(abs(alvof.y-alvo.y),2)) , cvScalar(0,0,255), 1, 8, 0);
+        dist_filter = DistTwoPoints(alvof,alvo) + circle_radius;
+        circle(frame.img, alvo, dist_filter, cvScalar(0,0,255), 1, 8, 0);
         /// Make a simple text to debug
         char str[256];
         sprintf(str, "x:%d/y:%d", alvof.x, alvof.y);
@@ -290,7 +340,7 @@ void *image_show( void *)        /*analiza imagem*/
         line(frame.img, Point (alvo.x,0), Point (alvo.x,frame.img.rows), cvScalar(205,201,201), 1, 8, 0);
 
         // modo de histograma, ainda com possivel bugs
-        #if 1
+        #if histogram
             if(!frameReduzido.img.empty())
             {
                 Image histImage;
