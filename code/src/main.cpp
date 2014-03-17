@@ -253,6 +253,8 @@ void *image_show( void *)        /*analiza imagem*/
         frame.ChangeColour(CV_GRAY2RGB);
         /// make a circle in alvof 
         circle(frame.img, alvof, 3, cvScalar(0,0,255), 1, 8, 0);
+        /// make a circle of R = dist of alvof and alvo 
+        circle(frame.img, alvo, sqrt(pow(abs(alvof.x-alvo.x),2)+pow(abs(alvof.y-alvo.y),2)) , cvScalar(0,0,255), 1, 8, 0);
         /// Make a simple text to debug
         char str[256];
         sprintf(str, "x:%d/y:%d", alvof.x, alvof.y);
@@ -287,25 +289,37 @@ void *image_show( void *)        /*analiza imagem*/
         line(frame.img, Point (0,alvo.y), Point (frame.img.cols,alvo.y), cvScalar(205,201,201), 1, 8, 0);
         line(frame.img, Point (alvo.x,0), Point (alvo.x,frame.img.rows), cvScalar(205,201,201), 1, 8, 0);
 
+        // modo de histograma, ainda com possivel bugs
         #if 1
-        Image histImage;
-        frameReduzido.ChangeColour(CV_GRAY2RGB);
-        MatHistogram(frameReduzido.img,histImage.img);
-        histImage.SetData(histImage.img, "histograma frameReduzido", CV_WINDOW_NORMAL);
-        histImage.Show();
+            if(!frameReduzido.img.empty())
+            {
+                Image histImage;
+                frameReduzido.ChangeColour(CV_GRAY2RGB);
+                MatHistogram(frameReduzido.img,histImage.img);
+                histImage.SetData(histImage.img, "histograma frameReduzido", CV_WINDOW_NORMAL);
+                histImage.Show();
+                frameReduzido.ChangeColour(CV_RGB2GRAY);
+            }
 
-        Image histImage2;
-        frameAnalizado.ChangeColour(CV_GRAY2RGB);
-        MatHistogram(frameAnalizado.img,histImage2.img);
-        histImage2.SetData(histImage2.img, "histograma frameAnalizado", CV_WINDOW_NORMAL);
-        histImage2.Show();
-        
-        Image histImage3;
-        frameAnalize.ChangeColour(CV_GRAY2RGB);
-        MatHistogram(frameAnalize.img,histImage3.img);
-        histImage3.SetData(histImage3.img, "histograma frameAnalize", CV_WINDOW_NORMAL);
-        histImage3.Show();
-        frameAnalize.ChangeColour(CV_RGB2GRAY);
+            if(!frameAnalizado.img.empty())
+            {
+                Image histImage2;
+                frameAnalizado.ChangeColour(CV_GRAY2RGB);
+                MatHistogram(frameAnalizado.img,histImage2.img);
+                histImage2.SetData(histImage2.img, "histograma frameAnalizado", CV_WINDOW_NORMAL);
+                histImage2.Show();
+                frameAnalizado.ChangeColour(CV_RGB2GRAY);
+            }
+            
+            if(!frameAnalize.img.empty())
+            {
+                Image histImage3;
+                frameAnalize.ChangeColour(CV_GRAY2RGB);
+                MatHistogram(frameAnalize.img,histImage3.img);
+                histImage3.SetData(histImage3.img, "histograma frameAnalize", CV_WINDOW_NORMAL);
+                histImage3.Show();
+                frameAnalize.ChangeColour(CV_RGB2GRAY);
+            }
         #endif
 
         frame.SetData(frame.img, "image_show", CV_WINDOW_NORMAL);
@@ -324,7 +338,6 @@ void *image_show( void *)        /*analiza imagem*/
         {
             Cerro; printf("ERROR DROP THE BASS\n");
         }
-        waitKey(30);
         pthread_cond_signal(&cond);
     }
     Cerro; printf("Image_show Down !\n");
