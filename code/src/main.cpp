@@ -287,6 +287,27 @@ void *image_show( void *)        /*analiza imagem*/
         line(frame.img, Point (0,alvo.y), Point (frame.img.cols,alvo.y), cvScalar(205,201,201), 1, 8, 0);
         line(frame.img, Point (alvo.x,0), Point (alvo.x,frame.img.rows), cvScalar(205,201,201), 1, 8, 0);
 
+        #if 1
+        Image histImage;
+        frameReduzido.ChangeColour(CV_GRAY2RGB);
+        MatHistogram(frameReduzido.img,histImage.img);
+        histImage.SetData(histImage.img, "histograma frameReduzido", CV_WINDOW_NORMAL);
+        histImage.Show();
+
+        Image histImage2;
+        frameAnalizado.ChangeColour(CV_GRAY2RGB);
+        MatHistogram(frameAnalizado.img,histImage2.img);
+        histImage2.SetData(histImage2.img, "histograma frameAnalizado", CV_WINDOW_NORMAL);
+        histImage2.Show();
+        
+        Image histImage3;
+        frameAnalize.ChangeColour(CV_GRAY2RGB);
+        MatHistogram(frameAnalize.img,histImage3.img);
+        histImage3.SetData(histImage3.img, "histograma frameAnalize", CV_WINDOW_NORMAL);
+        histImage3.Show();
+        frameAnalize.ChangeColour(CV_RGB2GRAY);
+        #endif
+
         frame.SetData(frame.img, "image_show", CV_WINDOW_NORMAL);
         frame.Show();
         mouse_on=frame.mouse.mouse_on;
