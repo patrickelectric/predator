@@ -114,11 +114,11 @@ float diffMat(Mat im1, Mat im2)
     {
       for(int y=0; y < im1.cols; y++)
       {
-        totalDiff += (float)abs(im1.at<uchar>(x,y) - im2.at<uchar>(x,y))/255.0;
+        totalDiff += (float)abs(im1.at<uchar>(x,y) - im2.at<uchar>(x,y))/255;
       }
     }
   } 
-  return 100.0*totalDiff/(double)(im1.cols * im1.rows);
+  return (100*totalDiff)/(im1.cols * im1.rows);
 }
 
 void detecCorners(Mat img, Mat& result)
@@ -200,5 +200,5 @@ void MatHistogram(Mat src, Mat& histImage)
 
 int DistTwoPoints(Point a, Point b)
 {
-    return sqrt(pow(abs(a.x-b.x),2)+pow(abs(a.y-b.y),2));
+    return (int)sqrt(pow((double)(a.x-b.x),2)+pow((double)(a.y-b.y),2));
 }
