@@ -2,9 +2,9 @@
 #define PTHREAD_THREADS_MAX   1024  //define o max de threads
 
 //sistema de tracking em testes
-#define tracking_low_speed    0     //ativa funcao de tracking em testes //0-1
+#define tracking_low_speed    1     //ativa funcao de tracking em testes //0-1
 #define circle_radius         10    //define o valor de raio do circulo de analize
-#define diff_percent          6     //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
+#define diff_percent          10    //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
 
 //debug
 #define histogram             1     //ativa janelas de histograma        //0-1
@@ -115,7 +115,7 @@ void *image_show( void *)        /*analiza imagem*/
     int scale=1;            // mantem tamanho original
     int dbt=30;             // distance_between_text
     float dist_filter=10;   // filtro de area
-    float veloc=0;
+    float veloc=1;
     float min_fps=4.0;      // fps minimo para aviso de queda de fps
     Size sample_size(sample_size_pixels,sample_size_pixels);    // size of sample
     Size aws(sample_size_pixels*4,sample_size_pixels*4);        // analysis_window_size 
@@ -311,15 +311,15 @@ void *image_show( void *)        /*analiza imagem*/
             sprintf(str, "dist_filter :  %.2f pixels",dist_filter);
             putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
 
-            /*
-            printf("frame:  %d,%d (x,y)\n",frame.img.cols,frame.img.rows);
-            printf("origem: %d,%d (x,y)\n",origem.x,origem.y);
-            printf("alvo :  %d,%d (x,y)\n",alvo.x,alvo.y);
-            printf("alvof:  %d,%d (x,y)\n",alvof.x,alvof.y);
-            printf("veloc:  %.2f pixels/sec\n",veloc);
-            printf("timer:  %.4f s\n",timer_image_show.b());
-            printf("dist_filter :  %.2f pixels\n",dist_filter);
-            */
+            #if 1
+                printf("frame:  %d,%d (x,y)\n",frame.img.cols,frame.img.rows);
+                printf("origem: %d,%d (x,y)\n",origem.x,origem.y);
+                printf("alvo :  %d,%d (x,y)\n",alvo.x,alvo.y);
+                printf("alvof:  %d,%d (x,y)\n",alvof.x,alvof.y);
+                printf("veloc:  %.2f pixels/sec\n",veloc);
+                printf("timer:  %.4f s\n",timer_image_show.b());
+                printf("dist_filter :  %.2f pixels\n",dist_filter);
+            #endif
 
             if(!frameAnalizado.img.empty() || !frameAnalizadoFiltrado.img.empty())
             {
@@ -345,11 +345,11 @@ void *image_show( void *)        /*analiza imagem*/
             sprintf(str, "event        :  %d",mouseInfo.event);
             putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
 
-            /*
-            printf("mouse_click :  %d,%d (x,y)\n",mouseInfo.x[0],mouseInfo.y[0]);
-            printf("mouse       :  %d,%d (x,y)\n",mouseInfo.x[1],mouseInfo.y[1]);
-            printf("event       :  %d\n",mouseInfo.event);
-            */
+            #if 0
+                printf("mouse_click :  %d,%d (x,y)\n",mouseInfo.x[0],mouseInfo.y[0]);
+                printf("mouse       :  %d,%d (x,y)\n",mouseInfo.x[1],mouseInfo.y[1]);
+                printf("event       :  %d\n",mouseInfo.event);
+            #endif
         #endif    
 
         #if (print_image_data || print_mouse_data)    
@@ -363,7 +363,7 @@ void *image_show( void *)        /*analiza imagem*/
         circle(frame.img, alvof, 3, cvScalar(0,0,255), 1, 8, 0);
         /// make a circle of R = dist of alvof and alvo 
         dist_filter = DistTwoPoints(alvof,alvo) + circle_radius;
-        veloc = (dist_filter - circle_radius)/timer_image_show.b();
+        veloc = abs((dist_filter - circle_radius)/timer_image_show.b());
         circle(frame.img, alvo, dist_filter, cvScalar(0,0,255), 1, 8, 0);
 
         /// Make a simple text to debug
