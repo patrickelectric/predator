@@ -112,23 +112,24 @@ void *thread_analize(void *)
 
 void *image_show( void *)        /*analiza imagem*/
 {
-    int scale=1; // mantem tamanho original
-    int dbt=30;  // distance_between_text
-    int dist_filter=10; // filtro de area
-    float min_fps=4.0; // fps minimo para aviso de queda de fps
-    Size sample_size(sample_size_pixels,sample_size_pixels);  // size of sample
-    Size aws(sample_size_pixels*4,sample_size_pixels*4); // analysis_window_size 
+    int scale=1;            // mantem tamanho original
+    int dbt=30;             // distance_between_text
+    float dist_filter=10;   // filtro de area
+    float veloc=0;
+    float min_fps=4.0;      // fps minimo para aviso de queda de fps
+    Size sample_size(sample_size_pixels,sample_size_pixels);    // size of sample
+    Size aws(sample_size_pixels*4,sample_size_pixels*4);        // analysis_window_size 
     bool change_sample=true;
     bool mouse_on=false;
 
-    Image frame;
-    Image frameAnalize;
-    Image frameAnalizado;
+    Image frame;            // frame de captura de camera
+    Image frameAnalize;     // frame de analize
+    Image frameAnalizado;   // frame resultante
     Image result;
     
     Point alvo;             // target coord
     Point alvof;            // target coord  with filter
-    Point last_alvo;
+    Point last_alvo;       
 
     timer timer_image_show;
 
@@ -283,19 +284,24 @@ void *image_show( void *)        /*analiza imagem*/
         }
 
         #if print_image_data
-            printf("frame:  %d,%d\n",frame.img.cols,frame.img.rows);
-            printf("origem: %d,%d\n",origem.x,origem.y);
-            printf("alvo :  %d,%d\n",alvo.x,alvo.y);
-            printf("alvof:  %d,%d\n",alvof.x,alvof.y);
+            printf("frame:  %d,%d (x,y)\n",frame.img.cols,frame.img.rows);
+            printf("origem: %d,%d (x,y)\n",origem.x,origem.y);
+            printf("alvo :  %d,%d (x,y)\n",alvo.x,alvo.y);
+            printf("alvof:  %d,%d (x,y)\n",alvof.x,alvof.y);
+            printf("veloc:  %.2f pixels/sec\n",veloc);
+            printf("timer:  %.4f\n s",timer_image_show.b());
+
             if(!frameAnalizado.img.empty() || !frameAnalizadoFiltrado.img.empty())
-                printf("diffF:  %f\n",diffMat(frameAnalizado.img, frameAnalizadoFiltrado.img));
+                printf("diffF:  %f %%\n",diffMat(frameAnalizado.img, frameAnalizadoFiltrado.img));
             if(!frameAnalizado.img.empty() || !frameAnalizadoFiltrado.img.empty())
-                printf("diff :  %f\n",diffMat(frameAnalizado.img, frameAnalize.img));
+                printf("diff :  %f %%\n",diffMat(frameAnalizado.img, frameAnalize.img));
+
+            printf("dist_filter :  %.2f pixels\n",dist_filter);
         #endif
 
         #if print_mouse_data
-            printf("mouse_click :  %d,%d\n",mouseInfo.x[0],mouseInfo.y[0]);
-            printf("mouse       :  %d,%d\n",mouseInfo.x[1],mouseInfo.y[1]);
+            printf("mouse_click :  %d,%d (x,y)\n",mouseInfo.x[0],mouseInfo.y[0]);
+            printf("mouse       :  %d,%d (x,y)\n",mouseInfo.x[1],mouseInfo.y[1]);
             printf("event       :  %d\n",mouseInfo.event);
         #endif    
 
@@ -305,6 +311,7 @@ void *image_show( void *)        /*analiza imagem*/
         circle(frame.img, alvof, 3, cvScalar(0,0,255), 1, 8, 0);
         /// make a circle of R = dist of alvof and alvo 
         dist_filter = DistTwoPoints(alvof,alvo) + circle_radius;
+        veloc = (dist_filter - circle_radius)/timer_image_show.b();
         circle(frame.img, alvo, dist_filter, cvScalar(0,0,255), 1, 8, 0);
         /// Make a simple text to debug
         char str[256];
