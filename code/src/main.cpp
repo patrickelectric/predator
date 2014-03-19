@@ -1,13 +1,13 @@
 #include "lib.h"
-#define PTHREAD_THREADS_MAX 1024    //define o max de threads
+#define PTHREAD_THREADS_MAX   1024  //define o max de threads
 
 //sistema de tracking em testes
-#define tracking_low_speed 0            //ativa funcao de tracking em testes //0-1
-#define circle_radius  10           //define o valor de raio do circulo de analize
-#define diff_percent   6            //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
+#define tracking_low_speed    0     //ativa funcao de tracking em testes //0-1
+#define circle_radius         10    //define o valor de raio do circulo de analize
+#define diff_percent          6     //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
 
 //debug
-#define histogram      1            //ativa janelas de histograma        //0-1
+#define histogram             1     //ativa janelas de histograma        //0-1
 #define print_image_data      1     //ativa print de image data          //0-1
 #define print_mouse_data      0     //ativa print de mouse data          //0-1
 
