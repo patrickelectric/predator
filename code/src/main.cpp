@@ -144,6 +144,7 @@ void *image_show( void *)        /*analiza imagem*/
 
     while(1)
     {
+        /// PARTE DE CAPTURA DA CAMERA E TRATAMENTO DE DADOS PARA EVITAR ERROS DE ANALIZES DO PROGRAMA
         /////////////////////////////////////////////////////////////////////////////////////
         timer_image_show.a();
   		
@@ -184,6 +185,8 @@ void *image_show( void *)        /*analiza imagem*/
                 frameAnalize.PutPiece(frame.img, Point(alvo.x-sample_size.width/2, alvo.y-sample_size.height/2), sample_size);
             }
         #endif
+
+        /// PARTE DE FILTROS E CAPTURA DE IMAGENS DO FRAME
         /////////////////////////////////////////////////////////////////////////////////////
         
         /// Create the result matrix
@@ -271,6 +274,8 @@ void *image_show( void *)        /*analiza imagem*/
                 alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*10);
             #endif
         }
+
+        /// PARTE DE DEBUG
         /////////////////////////////////////////////////////////////////////////////////////
 
         // math erro
