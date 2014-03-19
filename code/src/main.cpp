@@ -47,16 +47,18 @@ int main(int argc, char *argv[])
         Cwarning;
         printf("Por default o programa ira selecionar o maior ID de camera\n");
         
-        cap.open(3);
-        for(int idCamera=3; !cap.isOpened(); idCamera--) 
+        for(int idCamera = 3; !cap.open(idCamera); idCamera--) 
         {
 			Cerro;
-            printf("Erro ao abrir a camera id %d!\n",idCamera);
-            if(idCamera==-1)
+            printf("Erro ao abrir a camera id %d!\n", idCamera);
+            if(idCamera == 0)
                 return -1;
-            cap.release();
-            cap.open(idCamera);
         }
+		
+		Image frame;
+		while (frame.img.empty()){
+			cap >> frame.img;
+		}
     }
     else
     {
@@ -73,7 +75,6 @@ int main(int argc, char *argv[])
         }
     }
     /************************************************/ 
-
 	pthread_cond_init(&cond, NULL);
 	pthread_mutex_init(&mutex_freq_image_show, NULL);
 
@@ -155,7 +156,7 @@ void *image_show( void *)        /*analiza imagem*/
 		}
 				
 		frame.Flip();
-        frame.ScaleImg(scale);
+        frame.ScaleImg((float)scale);
         frame.ChangeColour(CV_RGB2GRAY);
         detecCorners(frame.img,frame.img); //futura implementação por contornos
 

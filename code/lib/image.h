@@ -42,7 +42,7 @@ void Image::SetData(Mat img_sample,char* window_name_sample ,int window_flag_sam
 
 void Image::ScaleImg(float scale)
 {
-    resize(img, img, Size(img.cols*scale,img.rows*scale));
+    resize(img, img, Size((int)(img.cols*scale),(int)(img.rows*scale)));
 }
 
 void Image::Flip()
