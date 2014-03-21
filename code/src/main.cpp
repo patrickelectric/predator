@@ -4,12 +4,12 @@
 //sistema de tracking em testes
 #define tracking_low_speed    0     //ativa funcao de tracking em testes //0-1
 #define circle_radius         10    //define o valor de raio do circulo de analize
-#define diff_percent          6    //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
+#define diff_percent          6     //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
 
 //debug
-#define histogram             0    //ativa janelas de histograma         //0-1
-#define print_image_data      0     //ativa print de image data          //0-1
-#define print_mouse_data      0     //ativa print de mouse data          //0-1
+#define histogram             0     //ativa janelas de histograma         //0-1
+#define print_image_data      1     //ativa print de image data          //0-1
+#define print_mouse_data      1     //ativa print de mouse data          //0-1
 
 #define sample_size_pixels    50    //declara o tamanho do sample de amostra (50 default)
 
