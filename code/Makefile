@@ -3,8 +3,9 @@ PRJDIR 		 := $(shell pwd)
 
 OUTDIR       := $(PRJDIR)
 
-CODDIR       := $(PRJDIR)/src
 LIBDIR       := $(PRJDIR)/lib
+OBJDIR       := $(PRJDIR)/bin
+CODDIR       := $(PRJDIR)/src
 
 # C source files
 
@@ -17,9 +18,15 @@ CC      = 	g++
 
 # compiler flags
 CFLAGS  = `pkg-config --libs --cflags opencv` 
-CFLAGS += -Wall -lpthread -Ofast -funroll-loops 
-CFLAGS += -Wno-write-strings -Wno-return-local-addr
-CFLAGS += -g
+CFLAGS += -lpthread -Ofast -funroll-loops -O3
+CFLAGS += -Wall -Wno-write-strings -Wno-return-local-addr
+CFLAGS += -g 
 
 all:
 	$(CC) $^ $(C_SRC) -o $(OUTDIR)/main -I$(C_LIB) $(CFLAGS)
+
+*.o:
+	$(CC) $(CFLAGS) $(LIBDIR)/*.h -c -o $(OBJDIR)/*.o
+
+clean:	
+	rm $(BIN)/*

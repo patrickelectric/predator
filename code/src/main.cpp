@@ -7,9 +7,9 @@
 #define diff_percent          6     //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
 
 //debug
-#define histogram             1     //ativa janelas de histograma        //0-1
+#define histogram             0     //ativa janelas de histograma         //0-1
 #define print_image_data      1     //ativa print de image data          //0-1
-#define print_mouse_data      0     //ativa print de mouse data          //0-1
+#define print_mouse_data      1     //ativa print de mouse data          //0-1
 
 #define sample_size_pixels    50    //declara o tamanho do sample de amostra (50 default)
 
@@ -115,7 +115,7 @@ void *image_show( void *)        /*analiza imagem*/
     int scale=1;            // mantem tamanho original
     int dbt=30;             // distance_between_text
     float dist_filter=10;   // filtro de area
-    float veloc=0;
+    float veloc=1;
     float min_fps=4.0;      // fps minimo para aviso de queda de fps
     Size sample_size(sample_size_pixels,sample_size_pixels);    // size of sample
     Size aws(sample_size_pixels*4,sample_size_pixels*4);        // analysis_window_size 
@@ -137,17 +137,22 @@ void *image_show( void *)        /*analiza imagem*/
     filterOrder1 filterx;
     filterOrder1 filtery;
 
+    while(frame.img.empty())
+        cap >> frame.img;
+
     data_mouse mouseInfo; 
-    mouseInfo.x[0]=310;
-    mouseInfo.y[0]=240; 
+    mouseInfo.x[0]=320;
+    mouseInfo.y[0]=320;
     mouseInfo.event=-1;
 
     while(1)
     {
+        /// PARTE DE CAPTURA DA CAMERA E TRATAMENTO DE DADOS PARA EVITAR ERROS DE ANALIZES DO PROGRAMA
         /////////////////////////////////////////////////////////////////////////////////////
         timer_image_show.a();
   		
 		cap >> frame.img;
+
         if(frame.img.empty())
         {
 			printf("END OF THE FILM !\n");
@@ -184,6 +189,8 @@ void *image_show( void *)        /*analiza imagem*/
                 frameAnalize.PutPiece(frame.img, Point(alvo.x-sample_size.width/2, alvo.y-sample_size.height/2), sample_size);
             }
         #endif
+
+        /// PARTE DE FILTROS, MATCHS E CAPTURA DE IMAGENS DO FRAME
         /////////////////////////////////////////////////////////////////////////////////////
         
         /// Create the result matrix
@@ -191,9 +198,8 @@ void *image_show( void *)        /*analiza imagem*/
         int result_rows =  frame.img.rows - frameAnalize.img.rows;
         result.img.create( result_cols, result_rows, CV_32FC1 );
 
-        /// Do the Matching and Normalize
-        int match_method=1; //1-5
         Point origem;
+        Point matchLoc;
         origem.x=alvof.x-aws.width/2;
         origem.y=alvof.y-aws.height/2;
         
@@ -210,20 +216,9 @@ void *image_show( void *)        /*analiza imagem*/
         Image  frameReduzido;
         frameReduzido.PutPiece(frame.img, Point(origem.x, origem.y),aws);
         
-        matchTemplate( frameReduzido.img, frameAnalize.img, result.img, match_method );
-        normalize( result.img, result.img, 0, 1, NORM_MINMAX, -1, Mat() );
+        Match Match;
 
-        /// Localizing the best match with minMaxLoc
-        double minVal; double maxVal; Point minLoc; Point maxLoc;
-        Point matchLoc;
-        minMaxLoc( result.img, &minVal, &maxVal, &minLoc, &maxLoc, Mat() );
-        
-
-        /// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
-        if( match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED )
-            { matchLoc = minLoc; }
-        else
-            { matchLoc = maxLoc; }
+        matchLoc = Match.SimpleMatch(frameReduzido.img, frameAnalize.img);
 
         /// to solve some bugs
         if((alvo.x-sample_size.width/2>0 && alvo.y-sample_size.height/2>0) && (alvo.x+sample_size.width/2<frame.img.cols && alvo.y+sample_size.height/2<frame.img.rows))
@@ -271,6 +266,8 @@ void *image_show( void *)        /*analiza imagem*/
                 alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*10);
             #endif
         }
+
+        /// PARTE DE DEBUG
         /////////////////////////////////////////////////////////////////////////////////////
 
         // math erro
@@ -283,27 +280,78 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("MATH ERROR (2)\n");
         }
 
+        char str[256];
+
+        Image debug;
+        debug.img.create( 500, 400, CV_8UC3);
+        debug.img = Scalar(0,0,0);
+        
+        #if (print_image_data || print_mouse_data) 
+            int multi=1;
+        #endif
+            
         #if print_image_data
-            printf("frame:  %d,%d (x,y)\n",frame.img.cols,frame.img.rows);
-            printf("origem: %d,%d (x,y)\n",origem.x,origem.y);
-            printf("alvo :  %d,%d (x,y)\n",alvo.x,alvo.y);
-            printf("alvof:  %d,%d (x,y)\n",alvof.x,alvof.y);
-            printf("veloc:  %.2f pixels/sec\n",veloc);
-            printf("timer:  %.4f\n s",timer_image_show.b());
+            float text_size=1.0;
+            sprintf(str, "frame :  %d,%d (x,y)",frame.img.cols,frame.img.rows);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "origem: %d,%d (x,y)",origem.x,origem.y);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "alvo  :  %d,%d (x,y)",alvo.x,alvo.y);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "alvof :  %d,%d (x,y)",alvof.x,alvof.y);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "veloc :  %.2f pixels/sec",veloc);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "timer :  %.4f s",timer_image_show.b());
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "dist_filter :  %.2f pixels",dist_filter);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+
+            #if 0
+                printf("frame:  %d,%d (x,y)\n",frame.img.cols,frame.img.rows);
+                printf("origem: %d,%d (x,y)\n",origem.x,origem.y);
+                printf("alvo :  %d,%d (x,y)\n",alvo.x,alvo.y);
+                printf("alvof:  %d,%d (x,y)\n",alvof.x,alvof.y);
+                printf("veloc:  %.2f pixels/sec\n",veloc);
+                printf("timer:  %.4f s\n",timer_image_show.b());
+                printf("dist_filter :  %.2f pixels\n",dist_filter);
+            #endif
 
             if(!frameAnalizado.img.empty() || !frameAnalizadoFiltrado.img.empty())
-                printf("diffF:  %f %%\n",diffMat(frameAnalizado.img, frameAnalizadoFiltrado.img));
+            {
+                sprintf(str, "diffF:  %f %%",diffMat(frameAnalizado.img, frameAnalizadoFiltrado.img));
+                putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+                
+                //printf("diffF:  %f %%\n",diffMat(frameAnalizado.img, frameAnalizadoFiltrado.img));
+            }
             if(!frameAnalizado.img.empty() || !frameAnalizadoFiltrado.img.empty())
-                printf("diff :  %f %%\n",diffMat(frameAnalizado.img, frameAnalize.img));
+            {
+                sprintf(str, "diff :  %f %%",diffMat(frameAnalizado.img, frameAnalize.img));
+                putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
 
-            printf("dist_filter :  %.2f pixels\n",dist_filter);
+                //printf("diff :  %f %%\n",diffMat(frameAnalizado.img, frameAnalize.img));
+            }
         #endif
 
         #if print_mouse_data
-            printf("mouse_click :  %d,%d (x,y)\n",mouseInfo.x[0],mouseInfo.y[0]);
-            printf("mouse       :  %d,%d (x,y)\n",mouseInfo.x[1],mouseInfo.y[1]);
-            printf("event       :  %d\n",mouseInfo.event);
+            sprintf(str, "mouse_click :  %d,%d (x,y)",mouseInfo.x[0],mouseInfo.y[0]);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "mouse       :  %d,%d (x,y)",mouseInfo.x[1],mouseInfo.y[1]);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+            sprintf(str, "event        :  %d",mouseInfo.event);
+            putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
+
+            #if 0
+                printf("mouse_click :  %d,%d (x,y)\n",mouseInfo.x[0],mouseInfo.y[0]);
+                printf("mouse       :  %d,%d (x,y)\n",mouseInfo.x[1],mouseInfo.y[1]);
+                printf("event       :  %d\n",mouseInfo.event);
+            #endif
         #endif    
+
+        #if (print_image_data || print_mouse_data)    
+            debug.SetData(debug.img, "debug", CV_WINDOW_NORMAL);
+            debug.Show();
+        #endif
 
         /// Make the image colorful again
         frame.ChangeColour(CV_GRAY2RGB);
@@ -311,18 +359,15 @@ void *image_show( void *)        /*analiza imagem*/
         circle(frame.img, alvof, 3, cvScalar(0,0,255), 1, 8, 0);
         /// make a circle of R = dist of alvof and alvo 
         dist_filter = DistTwoPoints(alvof,alvo) + circle_radius;
-        veloc = (dist_filter - circle_radius)/timer_image_show.b();
+        veloc = abs((dist_filter - circle_radius)/timer_image_show.b());
         circle(frame.img, alvo, dist_filter, cvScalar(0,0,255), 1, 8, 0);
+
         /// Make a simple text to debug
-        char str[256];
         sprintf(str, "x:%d/y:%d", alvof.x, alvof.y);
         putText(frame.img, str, cvPoint(alvof.x+dbt,alvof.y-dbt), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(0,0,255), 1, CV_AA);
 
         sprintf(str, "x:%d/y:%d", alvo.x, alvo.y);
         putText(frame.img, str, cvPoint(alvo.x+dbt,alvo.y+dbt), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(205,201,201), 1, CV_AA);
-
-        sprintf(str, "maxVal:%.8f/minVal:%.8f", maxVal, minVal);
-        putText(frame.img, str, cvPoint(dbt,dbt*1), FONT_HERSHEY_COMPLEX_SMALL, 0.6, cvScalar(0,100,0), 1, CV_AA);
 
         if(mouse_on)
         {
@@ -384,6 +429,9 @@ void *image_show( void *)        /*analiza imagem*/
         frame.Show();
         mouse_on=frame.mouse.mouse_on;
         mouseInfo.event=frame.mouse.event;
+
+        mouseInfo.x[1]=frame.mouse.x;
+        mouseInfo.y[1]=frame.mouse.y;
 
         if(mouseInfo.event==CV_EVENT_LBUTTONDOWN)
         {
