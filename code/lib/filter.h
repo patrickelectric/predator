@@ -8,7 +8,7 @@ class filterOrder1
 		bool  started;
 		
 	public:
-		double number[10];
+		double number[2];
 		filterOrder1() : started(false){};
 		double filter(double,double);
 };
@@ -25,8 +25,8 @@ double filterOrder1::filter(double x,double filterTime)
 	else
 		number[0]=x;
 	timer1.b();
-	// y[i] := α * x[i] + (1-α) * y[i-1]
-	number[1] = (timer1.end()/(filterTime+timer1.end()))*number[0] + number[1]*( 1-timer1.end()/(filterTime+timer1.end()));
+	//printf("timer end: %f\n",timer1.end() );
+	number[1]=number[1]*( 1-timer1.end()/(filterTime+timer1.end()))+(timer1.end()/(filterTime+timer1.end()))*number[0];
 	timer1.a();
 	return number[1];
 }
