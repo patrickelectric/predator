@@ -23,6 +23,7 @@
 #include <fcntl.h>    /* File control definitions */
 #include <errno.h>    /* Error number definitions */
 #include "image.h"
+#include "match.h"
 
 #ifdef __gnu_linux__
   #include "abstractlayer.h"

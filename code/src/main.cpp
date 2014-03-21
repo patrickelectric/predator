@@ -2,14 +2,14 @@
 #define PTHREAD_THREADS_MAX   1024  //define o max de threads
 
 //sistema de tracking em testes
-#define tracking_low_speed    1     //ativa funcao de tracking em testes //0-1
+#define tracking_low_speed    0     //ativa funcao de tracking em testes //0-1
 #define circle_radius         10    //define o valor de raio do circulo de analize
-#define diff_percent          10    //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
+#define diff_percent          6    //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
 
 //debug
-#define histogram             1     //ativa janelas de histograma        //0-1
-#define print_image_data      1     //ativa print de image data          //0-1
-#define print_mouse_data      1     //ativa print de mouse data          //0-1
+#define histogram             0    //ativa janelas de histograma         //0-1
+#define print_image_data      0     //ativa print de image data          //0-1
+#define print_mouse_data      0     //ativa print de mouse data          //0-1
 
 #define sample_size_pixels    50    //declara o tamanho do sample de amostra (50 default)
 
@@ -137,9 +137,12 @@ void *image_show( void *)        /*analiza imagem*/
     filterOrder1 filterx;
     filterOrder1 filtery;
 
+    while(frame.img.empty())
+        cap >> frame.img;
+
     data_mouse mouseInfo; 
-    mouseInfo.x[0]=310;
-    mouseInfo.y[0]=240; 
+    mouseInfo.x[0]=320;
+    mouseInfo.y[0]=320;
     mouseInfo.event=-1;
 
     while(1)
@@ -149,6 +152,7 @@ void *image_show( void *)        /*analiza imagem*/
         timer_image_show.a();
   		
 		cap >> frame.img;
+
         if(frame.img.empty())
         {
 			printf("END OF THE FILM !\n");
@@ -186,7 +190,7 @@ void *image_show( void *)        /*analiza imagem*/
             }
         #endif
 
-        /// PARTE DE FILTROS E CAPTURA DE IMAGENS DO FRAME
+        /// PARTE DE FILTROS, MATCHS E CAPTURA DE IMAGENS DO FRAME
         /////////////////////////////////////////////////////////////////////////////////////
         
         /// Create the result matrix
@@ -194,9 +198,8 @@ void *image_show( void *)        /*analiza imagem*/
         int result_rows =  frame.img.rows - frameAnalize.img.rows;
         result.img.create( result_cols, result_rows, CV_32FC1 );
 
-        /// Do the Matching and Normalize
-        int match_method=1; //1-5
         Point origem;
+        Point matchLoc;
         origem.x=alvof.x-aws.width/2;
         origem.y=alvof.y-aws.height/2;
         
@@ -213,20 +216,9 @@ void *image_show( void *)        /*analiza imagem*/
         Image  frameReduzido;
         frameReduzido.PutPiece(frame.img, Point(origem.x, origem.y),aws);
         
-        matchTemplate( frameReduzido.img, frameAnalize.img, result.img, match_method );
-        normalize( result.img, result.img, 0, 1, NORM_MINMAX, -1, Mat() );
+        Match Match;
 
-        /// Localizing the best match with minMaxLoc
-        double minVal; double maxVal; Point minLoc; Point maxLoc;
-        Point matchLoc;
-        minMaxLoc( result.img, &minVal, &maxVal, &minLoc, &maxLoc, Mat() );
-        
-
-        /// For SQDIFF and SQDIFF_NORMED, the best matches are lower values. For all the other methods, the higher the better
-        if( match_method  == CV_TM_SQDIFF || match_method == CV_TM_SQDIFF_NORMED )
-            { matchLoc = minLoc; }
-        else
-            { matchLoc = maxLoc; }
+        matchLoc = Match.SimpleMatch(frameReduzido.img, frameAnalize.img);
 
         /// to solve some bugs
         if((alvo.x-sample_size.width/2>0 && alvo.y-sample_size.height/2>0) && (alvo.x+sample_size.width/2<frame.img.cols && alvo.y+sample_size.height/2<frame.img.rows))
@@ -293,7 +285,11 @@ void *image_show( void *)        /*analiza imagem*/
         Image debug;
         debug.img.create( 500, 400, CV_8UC3);
         debug.img = Scalar(0,0,0);
-        int multi=1;
+        
+        #if (print_image_data || print_mouse_data) 
+            int multi=1;
+        #endif
+            
         #if print_image_data
             float text_size=1.0;
             sprintf(str, "frame :  %d,%d (x,y)",frame.img.cols,frame.img.rows);
@@ -311,7 +307,7 @@ void *image_show( void *)        /*analiza imagem*/
             sprintf(str, "dist_filter :  %.2f pixels",dist_filter);
             putText(debug.img, str, cvPoint(dbt,dbt*multi++), FONT_HERSHEY_COMPLEX_SMALL, text_size, cvScalar(0,0,255), 1, CV_AA);
 
-            #if 1
+            #if 0
                 printf("frame:  %d,%d (x,y)\n",frame.img.cols,frame.img.rows);
                 printf("origem: %d,%d (x,y)\n",origem.x,origem.y);
                 printf("alvo :  %d,%d (x,y)\n",alvo.x,alvo.y);
@@ -372,9 +368,6 @@ void *image_show( void *)        /*analiza imagem*/
 
         sprintf(str, "x:%d/y:%d", alvo.x, alvo.y);
         putText(frame.img, str, cvPoint(alvo.x+dbt,alvo.y+dbt), FONT_HERSHEY_COMPLEX_SMALL, 0.5, cvScalar(205,201,201), 1, CV_AA);
-
-        sprintf(str, "maxVal:%.8f/minVal:%.8f", maxVal, minVal);
-        putText(frame.img, str, cvPoint(dbt,dbt*1), FONT_HERSHEY_COMPLEX_SMALL, 0.6, cvScalar(0,100,0), 1, CV_AA);
 
         if(mouse_on)
         {
