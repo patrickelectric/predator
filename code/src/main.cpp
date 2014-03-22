@@ -125,6 +125,9 @@ void *image_show( void *)        /*analiza imagem*/
     Image frameAnalize;     // frame de analize
     Image frameAnalizado;   // frame resultante
     Image result;
+    Image amostra1;
+    Image amostra2;
+    Image original;
     
     Point alvo;             // target coord
     Point alvof;            // target coord  with filter
@@ -151,7 +154,6 @@ void *image_show( void *)        /*analiza imagem*/
         /////////////////////////////////////////////////////////////////////////////////////
         timer_image_show.a();
 		cap >> frame.img;
-
         if(frame.img.empty())
         {
 			printf("END OF THE FILM !\n");
@@ -162,7 +164,8 @@ void *image_show( void *)        /*analiza imagem*/
 		frame.Flip();
         frame.ScaleImg((float)scale);
         frame.ChangeColour(CV_RGB2GRAY);
-        //detecCorners(frame.img,frame.img); //futura implementação por contornos
+        original.img=frame.img.clone();
+        original.ChangeColour(CV_GRAY2RGB);
 
 		if(mouseInfo.x[0]>sample_size.width/2 && mouseInfo.y[0]>sample_size.height/2 && mouseInfo.x[0]<frame.img.cols-sample_size.width/2 && mouseInfo.y[0]<frame.img.rows-sample_size.height/2 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
@@ -445,7 +448,7 @@ void *image_show( void *)        /*analiza imagem*/
             int size=(int)sample_size_pixels/2;
             while(frame.mouse.event!=1)
             {
-                frame.img=frame2.clone();
+                frame.img=original.img.clone();
                 if((frame.mouse.x>size && frame.mouse.x<frame.img.cols-size) && (frame.mouse.y>size && frame.mouse.y<frame.img.rows-size))
                 {
                     //white square
@@ -458,8 +461,39 @@ void *image_show( void *)        /*analiza imagem*/
                 DrawBox(frame.img, Point(frame.img.cols/2,frame.img.rows/2), frame.img.cols-10, frame.img.rows-10, cvScalar(0,201,10), 10, 8, 0);
                 if(frame.Show()=='q')
                     break;
-            }   
+
+                if(!amostra1.img.empty() && !amostra2.img.empty())
+                    while(1) Match.SurfMatch(amostra1.img, amostra2.img);
+            }
+            if(amostra1.img.empty())
+            {
+                amostra1.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
+            }
+            else
+            {
+                if(amostra2.img.empty())
+                {
+                    amostra2.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
+                }
+            }
+        printf("out\n");
+
         }
+
+        #if 1
+            if(!amostra1.img.empty())
+            {
+                amostra1.SetData("amostra1");
+                amostra1.Show();
+            }
+        #endif
+        #if 1
+            if(!amostra2.img.empty())
+            {
+                amostra2.SetData("amostra2");
+                amostra2.Show();
+            }
+        #endif
 
         mouse_on=frame.mouse.mouse_on;
         mouseInfo.event=frame.mouse.event;

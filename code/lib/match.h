@@ -130,7 +130,7 @@ Point Match::SurfMatch(Mat& sample, Mat& frame)
 
   Point match;
 
-  if(good_matches.size() >= 4)
+  if(good_matches.size() >= 1)
   {
       Mat H = findHomography( obj, scene, RANSAC );
 
@@ -151,13 +151,17 @@ Point Match::SurfMatch(Mat& sample, Mat& frame)
       line( img_matches, scene_corners[3] + offset, scene_corners[0] + offset, Scalar( 0, 255, 0), 4 );
 
       //-- Show detected matches
+      #if 1
       imshow( "Good Matches & Object detection", img_matches );
+      waitKey(5);
+      #endif
 
       LastMatch.x=match.x=(scene_corners[0].x+scene_corners[1].x+scene_corners[2].x+scene_corners[3].x)/4 + offset.x;
       LastMatch.y=match.y=(scene_corners[0].y+scene_corners[1].y+scene_corners[2].y+scene_corners[3].y)/4 + offset.y;
   }
   else
   {
+    printf("less than 1\n");
     if(LastMatch.x==0 && LastMatch.y==0)
     {
         match.x=sample.cols/2;

@@ -138,7 +138,7 @@ void detecCorners(Mat img, Mat& result)
     normalize( dst, dst_norm, 0, 255, NORM_MINMAX, CV_32FC1, Mat() );
     convertScaleAbs( dst_norm, result );
     #else
-    #if 0
+    #if 1
     Canny( img, result, 4, 100, 3 );
     #else
     result=img.clone();
