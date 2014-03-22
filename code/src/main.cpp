@@ -129,13 +129,12 @@ void *image_show( void *)        /*analiza imagem*/
 
     timer timer_image_show;
 
-    filterOrder1 filter;
-    filterOrder1 filterx;
-    filterOrder1 filtery;
+    filterOrder1 filter;            // freq
+    filterOrder1 filter_alvo[2];    // alvo
 
-    data_mouse mouseInfo; 
-    mouseInfo.x[0]=320;
-    mouseInfo.y[0]=320;
+    data_mouse mouseInfo;           // mouse data
+    mouseInfo.x[0]=image_cols/2;             
+    mouseInfo.y[0]=image_rows/2;
     mouseInfo.event=-1;
 
     cap.set(CV_CAP_PROP_FRAME_WIDTH,  image_cols); 
@@ -148,6 +147,7 @@ void *image_show( void *)        /*analiza imagem*/
         /////////////////////////////////////////////////////////////////////////////////////
         timer_image_show.a();
 		cap >> frame.img;
+        
         if(frame.img.empty())
         {
 			printf("END OF THE FILM !\n");
@@ -155,6 +155,7 @@ void *image_show( void *)        /*analiza imagem*/
 		  		pthread_cancel(thread_info);
 			break;
 		}
+
 		frame.Flip();
         frame.ScaleImg((float)scale);
         frame.ChangeColour(CV_RGB2GRAY);
@@ -167,22 +168,20 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("Change! \n");
             frameAnalize.PutPiece(frame.img, Point(mouseInfo.x[0]-sample_size.width/2,mouseInfo.y[0]-sample_size.height/2), sample_size);
 
-            filterx.number[0]=filterx.number[1]=alvof.x=mouseInfo.x[0];
-            filtery.number[0]=filtery.number[1]=alvof.y=mouseInfo.y[0];
+            filter_alvo[0].number[0]=filter_alvo[0].number[1]=alvof.x=mouseInfo.x[0];
+            filter_alvo[1].number[0]=filter_alvo[1].number[1]=alvof.y=mouseInfo.y[0];
         }
         else if(mouseInfo.event == -1)
         {
             Rect myDim(Point(frame.img.cols/2,frame.img.rows/2),sample_size);
             frameAnalize.PutPiece(frame.img, Point(frame.img.cols/2,frame.img.rows/2), sample_size);  
 
-            filterx.number[0]=filterx.number[1]=alvo.x=alvof.x=frame.img.cols/2;
-            filtery.number[0]=filtery.number[1]=alvo.y=alvof.y=frame.img.rows/2;
+            filter_alvo[0].number[0]=filter_alvo[0].number[1]=alvo.x=alvof.x=frame.img.cols/2;
+            filter_alvo[1].number[0]=filter_alvo[1].number[1]=alvo.y=alvof.y=frame.img.rows/2;
         }
         #if tracking_low_speed
             else if (alvo.x>sample_size.width/2 && alvo.y>sample_size.height/2 && alvo.x<frame.img.cols-sample_size.width/2 && alvo.y<frame.img.rows-sample_size.height/2 && diffMat(frameAnalizado.img, frameAnalize.img)>diff_percent && DistTwoPoints(alvo,last_alvo)<dist_filter)
-            {
                 frameAnalize.PutPiece(frame.img, Point(alvo.x-sample_size.width/2, alvo.y-sample_size.height/2), sample_size);
-            }
         #endif
 
         /// PARTE DE FILTROS, MATCHS E CAPTURA DE IMAGENS DO FRAME
@@ -246,19 +245,19 @@ void *image_show( void *)        /*analiza imagem*/
             #if tracking_speed
                 if(DistTwoPoints(alvo, last_alvo) < dist_filter || mouseInfo.event == 1 ) // se estiver dentro da area ou sample change
                 {
-                    alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*10);
-                    alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*10);
+                    alvof.x=(int)filter_alvo[0].filter(alvo.x,timer_image_show.end()*10);
+                    alvof.y=(int)filter_alvo[1].filter(alvo.y,timer_image_show.end()*10);
                 }
                 else
                 {
                     alvo=last_alvo;
 
-                    alvof.x=(int)filterx.filter(last_alvo.x,timer_image_show.end()*10);
-                    alvof.y=(int)filtery.filter(last_alvo.y,timer_image_show.end()*10);
+                    alvof.x=(int)filter_alvo[0].filter(last_alvo.x,timer_image_show.end()*10);
+                    alvof.y=(int)filter_alvo[1].filter(last_alvo.y,timer_image_show.end()*10);
                 }
             #else
-                alvof.x=(int)filterx.filter(alvo.x,timer_image_show.end()*10);
-                alvof.y=(int)filtery.filter(alvo.y,timer_image_show.end()*10);
+                alvof.x=(int)filter_alvo[0].filter(alvo.x,timer_image_show.end()*10);
+                alvof.y=(int)filter_alvo[1].filter(alvo.y,timer_image_show.end()*10);
             #endif
         }
 
@@ -267,13 +266,10 @@ void *image_show( void *)        /*analiza imagem*/
 
         // math erro
         if(alvo.x<0 || alvo.y<0 || alvof.x<0 || alvof.y<0)
-        {
             Cerro; printf("MATH ERROR (1)\n");
-        }
+
         if(alvo.x>frame.img.cols || alvo.y>frame.img.rows || alvof.x>frame.img.cols || alvof.y>frame.img.rows)
-        {
             Cerro; printf("MATH ERROR (2)\n");
-        }
 
         char str[256];
 
@@ -390,10 +386,7 @@ void *image_show( void *)        /*analiza imagem*/
         //draw square
         int size=(int)sample_size_pixels/2;
         if((frame.mouse.x>size && frame.mouse.x<frame.img.cols-size) && (frame.mouse.y>size && frame.mouse.y<frame.img.rows-size))
-        {
-            //white square
             DrawBox(frame.img, Point(frame.mouse.x,frame.mouse.y), sample_size_pixels, sample_size_pixels, cvScalar(205,201,201), 1, 8, 0);
-        }
 
         // modo de histograma, ainda com possivel bugs
         #if histogram
@@ -487,9 +480,7 @@ void *image_show( void *)        /*analiza imagem*/
 
         // erro in some math loop ou analize
         if(freq_to_analize < min_fps)
-        {
             Cerro; printf("ERROR DROP THE BASS\n");
-        }
         pthread_cond_signal(&cond);
 
     }
