@@ -41,15 +41,12 @@ int main(int argc, char *argv[])
     /*********************PARAMETROS*****************/  
     if(argc<2) 
     {   
-        Cwarning;
-        printf("Nenhum argumento adicionado ao programa\n");
-        Cwarning;
-        printf("Por default o programa ira selecionar o maior ID de camera\n");
+        Cwarning; printf("Nenhum argumento adicionado ao programa\n");
+        Cwarning; printf("Por default o programa ira selecionar o maior ID de camera\n");
         
         for(int idCamera = 3; !cap.open(idCamera); idCamera--) 
         {
-			Cerro;
-            printf("Erro ao abrir a camera id %d!\n", idCamera);
+			Cerro; printf("Erro ao abrir a camera id %d!\n", idCamera);
             if(idCamera == 0)
                 return -1;
         }
@@ -63,13 +60,11 @@ int main(int argc, char *argv[])
     {
         char *local_video;      
         local_video=argv[1];
-        Cok;
-        printf("Video ! %s ! escolhido pelo usuario\n",local_video);
+        Cok; printf("Video ! %s ! escolhido pelo usuario\n",local_video);
         cap.open(local_video);
         if(!cap.isOpened())
         {
-            Cerro;
-            printf("Arquivo nao encontrado !\n");
+            Cerro; printf("Arquivo nao encontrado !\n");
             return -1;
         }
     }
@@ -125,8 +120,7 @@ void *image_show( void *)        /*analiza imagem*/
     Image frameAnalize;     // frame de analize
     Image frameAnalizado;   // frame resultante
     Image result;
-    Image amostra1;
-    Image amostra2;
+    Image amostra[2];
     Image original;
     
     Point alvo;             // target coord
@@ -415,21 +409,21 @@ void *image_show( void *)        /*analiza imagem*/
 
             if(!frameAnalizado.img.empty())
             {
-                Image histImage2;
+                Image histImage;
                 frameAnalizado.ChangeColour(CV_GRAY2RGB);
-                MatHistogram(frameAnalizado.img,histImage2.img);
-                histImage2.SetData(histImage2.img, "histograma frameAnalizado", CV_WINDOW_NORMAL);
-                histImage2.Show();
+                MatHistogram(frameAnalizado.img,histImage.img);
+                histImage.SetData(histImage.img, "histograma frameAnalizado", CV_WINDOW_NORMAL);
+                histImage.Show();
                 frameAnalizado.ChangeColour(CV_RGB2GRAY);
             }
             
             if(!frameAnalize.img.empty())
             {
-                Image histImage3;
+                Image histImage;
                 frameAnalize.ChangeColour(CV_GRAY2RGB);
-                MatHistogram(frameAnalize.img,histImage3.img);
-                histImage3.SetData(histImage3.img, "histograma frameAnalize", CV_WINDOW_NORMAL);
-                histImage3.Show();
+                MatHistogram(frameAnalize.img,histImage.img);
+                histImage.SetData(histImage.img, "histograma frameAnalize", CV_WINDOW_NORMAL);
+                histImage.Show();
                 frameAnalize.ChangeColour(CV_RGB2GRAY);
             }
         #endif
@@ -447,38 +441,35 @@ void *image_show( void *)        /*analiza imagem*/
             {
                 frame.img=original.img.clone();
                 if((frame.mouse.x>size && frame.mouse.x<frame.img.cols-size) && (frame.mouse.y>size && frame.mouse.y<frame.img.rows-size))
-                {
-                    //white square
-                    DrawBox(frame.img, Point(frame.mouse.x,frame.mouse.y), sample_size_pixels, sample_size_pixels, cvScalar(205,201,201), 1, 8, 0);
-                }
-                //green square
-                DrawBox(frame.img, Point(frame.img.cols/2,frame.img.rows/2), frame.img.cols-10, frame.img.rows-10, cvScalar(0,201,10), 10, 8, 0);
+                    DrawBox(frame.img, Point(frame.mouse.x,frame.mouse.y), sample_size_pixels, sample_size_pixels, cvScalar(205,201,201), 1, 8, 0); //white square
+
+                DrawBox(frame.img, Point(frame.img.cols/2,frame.img.rows/2), frame.img.cols-10, frame.img.rows-10, cvScalar(0,201,10), 10, 8, 0);   //green square
                 if(frame.Show()=='q')
                     break;
 
-                if(!amostra1.img.empty() && !amostra2.img.empty())
-                    while(1) Match.SurfMatch(amostra1.img, amostra2.img);
+                if(!amostra[0].img.empty() && !amostra[1].img.empty())
+                    while(1) Match.SurfMatch(amostra[0].img, amostra[1].img);
             }
 
-            if(amostra1.img.empty())
-                amostra1.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
+            if(amostra[0].img.empty())
+                amostra[0].PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
             else
-                if(amostra2.img.empty())
-                    amostra2.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
+                if(amostra[1].img.empty())
+                    amostra[1].PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
         }
 
         #if 1
-            if(!amostra1.img.empty())
+            if(!amostra[0].img.empty())
             {
-                amostra1.SetData("amostra1");
-                amostra1.Show();
+                amostra[0].SetData("amostra[0]");
+                amostra[0].Show();
             }
         #endif
         #if 1
-            if(!amostra2.img.empty())
+            if(!amostra[1].img.empty())
             {
-                amostra2.SetData("amostra2");
-                amostra2.Show();
+                amostra[1].SetData("amostra[1]");
+                amostra[1].Show();
             }
         #endif
 
