@@ -398,10 +398,7 @@ void *image_show( void *)        /*analiza imagem*/
         if((frame.mouse.x>size && frame.mouse.x<frame.img.cols-size) && (frame.mouse.y>size && frame.mouse.y<frame.img.rows-size))
         {
             //white square
-            line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
-            line(frame.img, Point (frame.mouse.x-size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
-            line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x-size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
-            line(frame.img, Point (frame.mouse.x+size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
+            DrawBox(frame.img, Point(frame.mouse.x,frame.mouse.y), sample_size_pixels, sample_size_pixels, cvScalar(205,201,201), 1, 8, 0);
         }
 
         // modo de histograma, ainda com possivel bugs
@@ -452,10 +449,7 @@ void *image_show( void *)        /*analiza imagem*/
                 if((frame.mouse.x>size && frame.mouse.x<frame.img.cols-size) && (frame.mouse.y>size && frame.mouse.y<frame.img.rows-size))
                 {
                     //white square
-                    line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
-                    line(frame.img, Point (frame.mouse.x-size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
-                    line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x-size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
-                    line(frame.img, Point (frame.mouse.x+size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
+                    DrawBox(frame.img, Point(frame.mouse.x,frame.mouse.y), sample_size_pixels, sample_size_pixels, cvScalar(205,201,201), 1, 8, 0);
                 }
                 //green square
                 DrawBox(frame.img, Point(frame.img.cols/2,frame.img.rows/2), frame.img.cols-10, frame.img.rows-10, cvScalar(0,201,10), 10, 8, 0);
@@ -465,19 +459,12 @@ void *image_show( void *)        /*analiza imagem*/
                 if(!amostra1.img.empty() && !amostra2.img.empty())
                     while(1) Match.SurfMatch(amostra1.img, amostra2.img);
             }
-            if(amostra1.img.empty())
-            {
-                amostra1.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
-            }
-            else
-            {
-                if(amostra2.img.empty())
-                {
-                    amostra2.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
-                }
-            }
-        printf("out\n");
 
+            if(amostra1.img.empty())
+                amostra1.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
+            else
+                if(amostra2.img.empty())
+                    amostra2.PutPiece(original.img, Point(frame.mouse.x-sample_size_pixels/2,frame.mouse.y-sample_size_pixels/2), sample_size);
         }
 
         #if 1
