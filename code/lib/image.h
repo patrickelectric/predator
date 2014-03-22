@@ -19,6 +19,8 @@ class Image
     char* window_name;
     int window_flag; //WINDOW_NORMAL - WINDOW_AUTOSIZE - WINDOW_OPENGL
 
+    void SetData(char* window_name_sample); 
+    void SetData(char* window_name_sample ,int window_flag_sample); 
     void SetData(Mat img_sample,char* window_name_sample ,int window_flag_sample);
     void ScaleImg(float scale);
     void Flip();
@@ -28,9 +30,25 @@ class Image
     void GetPiece(Mat& piece, int x,int y,int cols, int rows);
     void GetPiece(Mat& piece, Point point, Size size);
     char Show();
+    void Destroy();
 };
 
 Image* ins;
+
+void Image::SetData(char* window_name_sample)
+{
+    ins=this;
+    window_name=window_name_sample;
+    window_flag=CV_WINDOW_NORMAL;
+}
+
+void Image::SetData(char* window_name_sample ,int window_flag_sample)
+{
+    
+    ins=this;
+    window_name=window_name_sample;
+    window_flag=window_flag_sample;
+}
 
 void Image::SetData(Mat img_sample,char* window_name_sample ,int window_flag_sample)
 {
@@ -86,6 +104,11 @@ char Image::Show()
     imshow(window_name,img);
     setMouseCallback(window_name, mouseCallback, this);
     return waitKey(1);
+}
+
+void Image::Destroy()
+{
+    destroyWindow("frame");
 }
 
 void Image::mouseCallback(int event, int x, int y, int flags, void *param)

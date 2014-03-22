@@ -1,6 +1,8 @@
 #include "lib.h"
 #define PTHREAD_THREADS_MAX   1024  //define o max de threads
 
+#define image_cols            640   //1920
+#define image_rows            480   //1080
 //sistema de tracking em testes
 #define tracking_low_speed    0     //ativa funcao de tracking em testes //0-1
 #define circle_radius         10    //define o valor de raio do circulo de analize
@@ -29,7 +31,6 @@ pthread_t thread_info;
 /********************FUNCTIONS*******************/
 void *image_show (void *);              //thread of frame analize
 void *thread_analize (void *);              //thread of frame analize
-void CallBackFunc(int event, int x, int y, int flags, void* userdata);    
 /********************FUNCTIONS*******************/
 
 VideoCapture cap;      // frame capture from camera
@@ -37,8 +38,6 @@ float freq_to_analize;
 
 int main(int argc, char *argv[])
 {
-    start_fps();
-
     /*********************PARAMETROS*****************/  
     if(argc<2) 
     {   
@@ -121,8 +120,8 @@ void *image_show( void *)        /*analiza imagem*/
     Size aws(sample_size_pixels*4,sample_size_pixels*4);        // analysis_window_size 
     bool change_sample=true;
     bool mouse_on=false;
+    char key=0;
 
-    Image frame;            // frame de captura de camera
     Image frameAnalize;     // frame de analize
     Image frameAnalizado;   // frame resultante
     Image result;
@@ -137,20 +136,20 @@ void *image_show( void *)        /*analiza imagem*/
     filterOrder1 filterx;
     filterOrder1 filtery;
 
-    while(frame.img.empty())
-        cap >> frame.img;
-
     data_mouse mouseInfo; 
     mouseInfo.x[0]=320;
     mouseInfo.y[0]=320;
     mouseInfo.event=-1;
 
+    cap.set(CV_CAP_PROP_FRAME_WIDTH,  image_cols); 
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, image_rows); 
+
     while(1)
     {
+        Image frame;            // frame de captura de camera
         /// PARTE DE CAPTURA DA CAMERA E TRATAMENTO DE DADOS PARA EVITAR ERROS DE ANALIZES DO PROGRAMA
         /////////////////////////////////////////////////////////////////////////////////////
         timer_image_show.a();
-  		
 		cap >> frame.img;
 
         if(frame.img.empty())
@@ -160,11 +159,10 @@ void *image_show( void *)        /*analiza imagem*/
 		  		pthread_cancel(thread_info);
 			break;
 		}
-				
 		frame.Flip();
         frame.ScaleImg((float)scale);
         frame.ChangeColour(CV_RGB2GRAY);
-        detecCorners(frame.img,frame.img); //futura implementação por contornos
+        //detecCorners(frame.img,frame.img); //futura implementação por contornos
 
 		if(mouseInfo.x[0]>sample_size.width/2 && mouseInfo.y[0]>sample_size.height/2 && mouseInfo.x[0]<frame.img.cols-sample_size.width/2 && mouseInfo.y[0]<frame.img.rows-sample_size.height/2 && mouseInfo.event==EVENT_LBUTTONDOWN)
         {
@@ -392,6 +390,17 @@ void *image_show( void *)        /*analiza imagem*/
         line(frame.img, Point (0,alvo.y), Point (frame.img.cols,alvo.y), cvScalar(205,201,201), 1, 8, 0);
         line(frame.img, Point (alvo.x,0), Point (alvo.x,frame.img.rows), cvScalar(205,201,201), 1, 8, 0);
 
+        //draw square
+        int size=(int)sample_size_pixels/2;
+        if((frame.mouse.x>size && frame.mouse.x<frame.img.cols-size) && (frame.mouse.y>size && frame.mouse.y<frame.img.rows-size))
+        {
+            //white square
+            line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
+            line(frame.img, Point (frame.mouse.x-size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
+            line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x-size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
+            line(frame.img, Point (frame.mouse.x+size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
+        }
+
         // modo de histograma, ainda com possivel bugs
         #if histogram
             if(!frameReduzido.img.empty())
@@ -426,7 +435,32 @@ void *image_show( void *)        /*analiza imagem*/
         #endif
 
         frame.SetData(frame.img, "image_show", CV_WINDOW_NORMAL);
-        frame.Show();
+        key = frame.Show();
+
+        // TAKE SQUARE OF ANALIZE 
+        if(key=='c')
+        {
+            Mat frame2;
+            frame2=frame.img.clone();
+            int size=(int)sample_size_pixels/2;
+            while(frame.mouse.event!=1)
+            {
+                frame.img=frame2.clone();
+                if((frame.mouse.x>size && frame.mouse.x<frame.img.cols-size) && (frame.mouse.y>size && frame.mouse.y<frame.img.rows-size))
+                {
+                    //white square
+                    line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
+                    line(frame.img, Point (frame.mouse.x-size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
+                    line(frame.img, Point (frame.mouse.x-size,frame.mouse.y-size), Point (frame.mouse.x-size,frame.mouse.y+size), cvScalar(205,201,201), 1, 8, 0);
+                    line(frame.img, Point (frame.mouse.x+size,frame.mouse.y+size), Point (frame.mouse.x+size,frame.mouse.y-size), cvScalar(205,201,201), 1, 8, 0);
+                }
+                //green square
+                DrawBox(frame.img, Point(frame.img.cols/2,frame.img.rows/2), frame.img.cols-10, frame.img.rows-10, cvScalar(0,201,10), 10, 8, 0);
+                if(frame.Show()=='q')
+                    break;
+            }   
+        }
+
         mouse_on=frame.mouse.mouse_on;
         mouseInfo.event=frame.mouse.event;
 
@@ -445,6 +479,7 @@ void *image_show( void *)        /*analiza imagem*/
             Cerro; printf("ERROR DROP THE BASS\n");
         }
         pthread_cond_signal(&cond);
+
     }
     Cerro; printf("Image_show Down !\n");
     return NULL;

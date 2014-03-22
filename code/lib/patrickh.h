@@ -202,3 +202,11 @@ int DistTwoPoints(Point a, Point b)
 {
     return (int)sqrt(pow((double)(a.x-b.x),2)+pow((double)(a.y-b.y),2));
 }
+
+void DrawBox(Mat& frame, Point a, int size1, int size2, Scalar colour, int tickness, int line_type, int shift )
+{
+    line(frame, Point(a.x-size1/2,a.y-size2/2), Point(a.x-size1/2,a.y+size2/2), colour, tickness, line_type, shift);
+    line(frame, Point(a.x-size1/2,a.y-size2/2), Point(a.x+size1/2,a.y-size2/2), colour, tickness, line_type, shift);
+    line(frame, Point(a.x+size1/2,a.y-size2/2), Point(a.x+size1/2,a.y+size2/2), colour, tickness, line_type, shift);
+    line(frame, Point(a.x-size1/2,a.y+size2/2), Point(a.x+size1/2,a.y+size2/2), colour, tickness, line_type, shift);
+}
