@@ -105,7 +105,7 @@ float diffMat(Mat im1, Mat im2)
   float totalDiff=0.0f;
   if ( (im1.cols != im2.cols) || (im1.rows !=im2.rows) )
   {
-    printf("width/height of the images must match!\n");
+    // printf("width/height of the images must match!\n");
   } 
   else 
   {

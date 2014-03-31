@@ -3,10 +3,14 @@
 
 #define image_cols            640   //1920
 #define image_rows            480   //1080
+
+//filter constante
+#define fc                    10
+
 //sistema de tracking em testes
-#define tracking_low_speed    0     //ativa funcao de tracking em testes //0-1
+#define tracking_low_speed    1     //ativa funcao de tracking em testes //0-1
 #define circle_radius         10    //define o valor de raio do circulo de analize
-#define diff_percent          6     //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
+#define diff_percent          100   //define o valor de diff entre a sample e o detectado, caso maior pega novo sample
 
 //debug
 #define histogram             0     //ativa janelas de histograma         //0-1
@@ -214,6 +218,10 @@ void *image_show( void *)        /*analiza imagem*/
 
         matchLoc = Match.SimpleMatch(frameReduzido.img, frameAnalize.img);
 
+        /// solve initial problens and match
+        if(alvo.x<0 || alvo.y<0 || alvof.x<0 || alvof.y<0 || alvo.x>frame.img.cols || alvo.y>frame.img.rows || alvof.x>frame.img.cols || alvof.y>frame.img.rows)
+            origem=alvof=alvof=Point(sample_size_pixels/2+1,sample_size_pixels/2+1);
+
         /// to solve some bugs
         if((alvo.x-sample_size.width/2>0 && alvo.y-sample_size.height/2>0) && (alvo.x+sample_size.width/2<frame.img.cols && alvo.y+sample_size.height/2<frame.img.rows))
         { 
@@ -242,22 +250,22 @@ void *image_show( void *)        /*analiza imagem*/
             alvo.y=matchLoc.y+origem.y+sample_size.height/2;
 
             // filter of distance
-            #if tracking_speed
+            #if tracking_low_speed
                 if(DistTwoPoints(alvo, last_alvo) < dist_filter || mouseInfo.event == 1 ) // se estiver dentro da area ou sample change
                 {
-                    alvof.x=(int)filter_alvo[0].filter(alvo.x,timer_image_show.end()*10);
-                    alvof.y=(int)filter_alvo[1].filter(alvo.y,timer_image_show.end()*10);
+                    alvof.x=(int)filter_alvo[0].filter(alvo.x,timer_image_show.end()*fc);
+                    alvof.y=(int)filter_alvo[1].filter(alvo.y,timer_image_show.end()*fc);
                 }
                 else
                 {
                     alvo=last_alvo;
 
-                    alvof.x=(int)filter_alvo[0].filter(last_alvo.x,timer_image_show.end()*10);
-                    alvof.y=(int)filter_alvo[1].filter(last_alvo.y,timer_image_show.end()*10);
+                    alvof.x=(int)filter_alvo[0].filter(last_alvo.x,timer_image_show.end()*fc);
+                    alvof.y=(int)filter_alvo[1].filter(last_alvo.y,timer_image_show.end()*fc);
                 }
             #else
-                alvof.x=(int)filter_alvo[0].filter(alvo.x,timer_image_show.end()*10);
-                alvof.y=(int)filter_alvo[1].filter(alvo.y,timer_image_show.end()*10);
+                alvof.x=(int)filter_alvo[0].filter(alvo.x,timer_image_show.end()*fc);
+                alvof.y=(int)filter_alvo[1].filter(alvo.y,timer_image_show.end()*fc);
             #endif
         }
 
@@ -266,10 +274,10 @@ void *image_show( void *)        /*analiza imagem*/
 
         // math erro
         if(alvo.x<0 || alvo.y<0 || alvof.x<0 || alvof.y<0)
-            Cerro; printf("MATH ERROR (1)\n");
+            {Cerro; printf("MATH ERROR (1)\n");}
 
         if(alvo.x>frame.img.cols || alvo.y>frame.img.rows || alvof.x>frame.img.cols || alvof.y>frame.img.rows)
-            Cerro; printf("MATH ERROR (2)\n");
+            {Cerro; printf("MATH ERROR (2)\n");}
 
         char str[256];
 
@@ -480,7 +488,7 @@ void *image_show( void *)        /*analiza imagem*/
 
         // erro in some math loop ou analize
         if(freq_to_analize < min_fps)
-            Cerro; printf("ERROR DROP THE BASS\n");
+            {Cerro; printf("ERROR DROP THE BASS\n");}
         pthread_cond_signal(&cond);
 
     }
