@@ -139,6 +139,8 @@ void *image_show( void *)        /*analiza imagem*/
     data_mouse mouseInfo;           // mouse data
     mouseInfo.x[0]=image_cols/2;             
     mouseInfo.y[0]=image_rows/2;
+	mouseInfo.x[1] = 0;
+	mouseInfo.y[1] = 0;
     mouseInfo.event=-1;
 
     cap.set(CV_CAP_PROP_FRAME_WIDTH,  image_cols); 
